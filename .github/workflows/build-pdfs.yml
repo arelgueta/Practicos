@@ -53,6 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     env:
       GH_REPO: ${{ github.repository }}
 

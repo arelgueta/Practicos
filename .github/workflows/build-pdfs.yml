@@ -1,0 +1,102 @@
+name: Build PDFs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.tex'
+      - '**/*.sty'
+      - '**/*.cls'
+      - '**/*.bib'
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.pdf'
+      - '.github/workflows/build-pdfs.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add one entry for each document that should produce a PDF artifact.
+        include:
+          - tex_file: TP1/Practico1.tex
+            pdf_file: TP1/Practico1.pdf
+            artifact_name: Practico1-pdf
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile ${{ matrix.tex_file }}
+        uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4
+        with:
+          root_file: ${{ matrix.tex_file }}
+          work_in_root_file_dir: true
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.pdf_file }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download PDFs from build matrix
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release
+          gh run download "$GITHUB_RUN_ID" --dir release
+          for artifact in release/*; do
+            if [ -d "$artifact" ]; then
+              cp "$artifact"/*.pdf release/
+            fi
+          done
+
+      - name: Compare with latest PDF release
+        id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous_tag=$(gh release list --limit 100 --json tagName,publishedAt \
+            --jq 'sort_by(.publishedAt) | reverse | map(select(.tagName | startswith("pdfs-"))) | .[0].tagName // ""')
+          mkdir -p previous
+
+          if [ -n "$previous_tag" ]; then
+            gh release download "$previous_tag" --pattern '*.pdf' --dir previous
+          fi
+
+          changed=false
+          for pdf in release/*.pdf; do
+            name=${pdf##*/}
+            if [ ! -f "previous/$name" ] || ! cmp -s "$pdf" "previous/$name"; then
+              changed=true
+              break
+            fi
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Create PDF release
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="pdfs-${GITHUB_RUN_ID}"
+          gh release create "$tag" release/*.pdf \
+            --target "$GITHUB_SHA" \
+            --title "PDFs ${GITHUB_RUN_NUMBER}" \
+            --notes "Generated from ${GITHUB_SHA}."

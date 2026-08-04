@@ -1,0 +1,29 @@
+name: Compilar LaTeX a PDF
+
+on:
+  push:
+    branches:
+      - main # Se activa cuando subes cambios a main
+
+permissions:
+  contents: write # Permiso para guardar el PDF en tu repo
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Compilar LaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: TP1/Practico1.tex # Tu archivo objetivo
+
+      - name: Subir PDF al repositorio
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add TP1/Practico1.pdf
+          git commit -m "PDF actualizado automáticamente [skip ci]" || echo "Sin cambios"
+          git push

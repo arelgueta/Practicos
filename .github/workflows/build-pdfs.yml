@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '**/*.tex'
+      - '**/*.typ'
       - '**/*.sty'
       - '**/*.cls'
       - '**/*.bib'
@@ -47,8 +48,25 @@ jobs:
           path: ${{ matrix.pdf_file }}
           if-no-files-found: error
 
+  build-typst:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile Typst document
+        run: make typst
+
+      - name: Upload Typst PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Practico1-typst-pdf
+          path: TP1-typst/main.pdf
+          if-no-files-found: error
+
   release:
-    needs: build
+    needs: [build, build-typst]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

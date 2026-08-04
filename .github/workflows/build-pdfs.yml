@@ -20,7 +20,39 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      tex: ${{ steps.filter.outputs.tex }}
+      typst: ${{ steps.filter.outputs.typst }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Detect document changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            tex:
+              - '**/*.tex'
+              - '**/*.sty'
+              - '**/*.cls'
+              - '**/*.bib'
+              - '**/*.png'
+              - '**/*.jpg'
+              - '**/*.jpeg'
+              - '**/*.pdf'
+            typst:
+              - '**/*.typ'
+              - '**/*.png'
+              - '**/*.jpg'
+              - '**/*.jpeg'
+
   build:
+    needs: changes
+    if: needs.changes.outputs.tex == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,25 +81,48 @@ jobs:
           if-no-files-found: error
 
   build-typst:
+    needs: changes
+    if: needs.changes.outputs.typst == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add one entry for each Typst document that should produce a PDF artifact.
+        include:
+          - typ_file: TP1-typst/Practico1t.typ
+            pdf_file: TP1-typst/Practico1t.pdf
+            artifact_name: Practico1t-pdf
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Compile Typst document
-        run: make typst
+      - name: Compile ${{ matrix.typ_file }}
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$PWD:/work" \
+            -w "/work/$(dirname '${{ matrix.typ_file }}')" \
+            ghcr.io/typst/typst:latest \
+            compile --root /work "$(basename '${{ matrix.typ_file }}')" \
+              "$(basename '${{ matrix.pdf_file }}')"
 
       - name: Upload Typst PDF artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Practico1-typst-pdf
-          path: TP1-typst/Practico1t.pdf
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.pdf_file }}
           if-no-files-found: error
 
   release:
     needs: [build, build-typst]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs['build-typst'].result == 'success' || needs['build-typst'].result == 'skipped') &&
+      (needs.build.result == 'success' || needs['build-typst'].result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write

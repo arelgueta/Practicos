@@ -1,0 +1,11 @@
+# LaTeX build artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# Generated PDF
+/TP1/Practico1.pdf

@@ -104,7 +104,7 @@ SISTEMAS OPERATIVOS
 \tableofcontents
 \newpage
 
-\subsection{Iniciando en Linux}
+\section{Iniciando en Linux}
 
 Para iniciar este viaje, te invitamos a encender la computadora y elegir bootear con "Ubuntu", el Sistema Operativo que utilizaremos en la materia. 
 
@@ -114,7 +114,7 @@ Para iniciar este viaje, te invitamos a encender la computadora y elegir bootear
       \caption{Escritorio de Ubuntu}
     \end{figure}
 
-\subsection{Línea de comandos}
+\section{Línea de comandos}
 
 La gran mayoría de las distribuciones de Linux proveen acceso a una interfaz basada en \textbf{texto}.
 
@@ -143,7 +143,7 @@ Se puede intepretar de la siguiente manera:
 \texttt{ubuntu@ubuntu:\textasciitilde}\textcolor{blue}{\texttt{\$}} $\leftarrow$ Nos indica que estamos en modo usuario; \texttt{\#} significa \texttt{root}.
 \end{notebox}
 
-\subsection{Carpetas y archivos}
+\section{Carpetas y archivos}
 
 Los archivos dentro del sistema de archivos de linux tienen un ``path'' o ``ruta'' en el que estan ubicados.
 
@@ -157,15 +157,27 @@ El caracter \textcolor{red}{``\texttt{.}''} es especial y es una referencia a la
 El conjunto \textcolor{teal}{``\texttt{..}''} es especial y significa la \textcolor{teal}{``carpeta padre de''}.
 \end{notebox}
 
-\TBD\ File descriptors
+\section{Descriptores de archivos}
 
-\subsection{Comandos}
+Un descriptor de archivo ``file descriptor'' es un número entero no negativo que utiliza el sistema operativo para identificar de forma única un archivo abierto (entre otras cosas).
+
+Por defecto, casi todos los programas se inician automáticamente con tres canales de comunicación asignados a valores enteros fijos:
+
+\begin{itemize}[nosep]
+  \item 0 (\texttt{stdin}): Entrada estándar
+  \item 1 (\texttt{stdout}): Salida estándar
+  \item 2 (\texttt{stderr}): Error estándar
+\end{itemize}
+
+Si abrimos un archivo usando la llamada al sistema \lstinline!open!, es posible que se nos asigne el descriptor ``3''.
+
+\section{Comandos}
 
 Los comandos que escribamos en la terminal son interpretados por un programa que se llama ``shell''. El ``shell'' mas comun es ``bash''.
 
 La estructura basica de un comando en ``bash'' es \lstinline!comando argumento1 argumento2 ...!
 
-\subsubsection{Algunos comandos}
+\subsection{Algunos comandos}
 
 Un comando util es \lstinline!pwd! - ``Print working directory''. Esto muestra como resultado la carpeta actual que tenemos abierta (``cwd'' - Current Working Directory). Es posible ejecutar sin argumentos.
 
@@ -289,7 +301,50 @@ Se puede salir apretando \lstinline!q!.
 Tambien tiene otras funcionalidades como apretar \lstinline!/! entra en modo busqueda. Es posible escribir un texto y apretar \lstinline!Enter!. Esto resalta todas las ocurrencias del texto. Se puede saltar entre anterior y posterior con \lstinline!N! y \lstinline!Shift+N!.
 \end{infobox}
 
-\subsection{Llamadas a sistema, ``syscalls''}
+\subsection{APT: administrador de paquetes}
+
+APT (\textit{Advanced Package Tool}) permite instalar, actualizar y eliminar programas en distribuciones basadas en Debian, como Ubuntu.
+
+La información sobre los paquetes disponibles se actualiza con:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ sudo apt update
+\end{lstlisting}
+
+Este comando descarga la información más reciente desde los repositorios configurados. No instala ni actualiza programas.
+
+Para instalar un paquete usamos:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ sudo apt install tree
+\end{lstlisting}
+
+Para eliminarlo:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ sudo apt remove tree
+\end{lstlisting}
+
+Podemos buscar paquetes por nombre o descripción:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ apt search tree
+\end{lstlisting}
+
+La opción \lstinline!sudo! ejecuta el comando con permisos administrativos, necesarios porque la instalación modifica directorios y archivos protegidos del sistema.
+
+Una secuencia habitual para instalar software es:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ sudo apt update
+ubuntu@ubuntu:~$ sudo apt install gcc
+\end{lstlisting}
+
+\begin{infobox}
+\texttt{apt update} actualiza el índice de paquetes. \texttt{apt install} instala un paquete usando ese índice. Son operaciones distintas.
+\end{infobox}
+
+\section{Llamadas a sistema, ``syscalls''}
 
 Podemos utilizar el programa \lstinline!strace! (system call trace) que sigue la traza a las llamadas a sistema y las señales de un proceso, interceptándolas, registrándolas y mostrándolas por pantalla (stderr, standard error).
 
@@ -327,7 +382,7 @@ Podemos observar que el resultado de la syscall \lstinline!openat! es ``3''. Est
 Podemos probar también con un programa simple como \lstinline!pwd! y observar que logra su objetivo primordial haciendo una llamada a la función \lstinline!getcwd!.
 \end{infobox}
 
-\subsection{Editores de texto}
+\section{Editores de texto}
 
 Un editor de texto es un programa como cualquier otro; pero que nos permite editar texto.
 
@@ -348,7 +403,7 @@ Pero hay editores que tambien se pueden usar desde la linea de comandos, los mas
   \item \lstinline!ed! / \lstinline!sed!
 \end{itemize}
 
-\subsubsection{Mini-Tutorial de VIM}
+\subsection{Mini-Tutorial de VIM}
 
 Primero abrir un archivo nuevo o existente:
 
@@ -374,7 +429,7 @@ VIM tambien posee modo busqueda con \lstinline!/!.
 Para mas informacion es posible correr el comando \lstinline!vimtutor!.
 \end{infobox}
 
-\subsection{C: hello, world}
+\section{C: hello, world}
 
 Un programa muy simple en C (Crear un archivo \lstinline!hello.c! y escribir este contenido):
 
@@ -400,7 +455,7 @@ La función de biblioteca \lstinline!printf()! envía texto formateado a la pant
 
 Y la instrucción \lstinline!return 0! devuelve un cero -que, por convención, indica que no hubo error-, finalizando efectivamente el programa.
 
-\subsubsection{GCC: GNU Compiler Collection}
+\subsection{GCC: GNU Compiler Collection}
 
 La colección de compiladores GNU es un conjunto de compiladores creados por el proyecto GNU. Originalmente GCC (y el comando \lstinline!gcc!) significaba GNU C Compiler (compilador GNU de C), porque sólo compilaba el lenguaje C, pero posteriormente se extendió para compilar C++, Fortran, Ada y otros.
 
@@ -465,7 +520,7 @@ ubuntu@ubuntu:~$ gcc -S hello.c
 
 Este comando invoca al preprocesador (cpp) sobre el archivo \lstinline!hello.c!, realiza una compilación inicial y luego se detiene antes de ejecutar el ensamblador. Genera el archivo \lstinline!hello.s!.
 
-\subsection{Python: hello, world}
+\section{Python: hello, world}
 
 El programa equivalente escrito en lenguaje Python sería simplemente:
 
@@ -486,11 +541,57 @@ ubuntu@ubuntu:~$
 
 Notar que es necesario otorgarle permisos de ejecucion al archivo utilizando \lstinline!chmod!.
 
-\TBD\ file permissions
+\section{Permisos de archivos}
+
+En Linux, cada archivo tiene permisos para tres grupos de usuarios:
+
+\begin{itemize}[nosep]
+  \item propietario (\texttt{user} o \texttt{u}),
+  \item grupo propietario (\texttt{group} o \texttt{g}),
+  \item resto de usuarios (\texttt{others} o \texttt{o}).
+\end{itemize}
+
+Cada grupo puede tener permisos de lectura, escritura y ejecución:
+
+\begin{itemize}[nosep]
+  \item \texttt{r}: leer el contenido,
+  \item \texttt{w}: modificar el contenido,
+  \item \texttt{x}: ejecutar el archivo.
+\end{itemize}
+
+Podemos observarlos usando:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ ls -l hello.py
+-rwxr--r-- 1 ubuntu ubuntu 48 Aug  3 20:00 hello.py
+\end{lstlisting}
+
+Los primeros diez caracteres representan el tipo de archivo y sus permisos. El primer carácter indica el tipo; por ejemplo, \texttt{-} representa un archivo regular. Los siguientes nueve caracteres se agrupan en propietario, grupo y otros:
+
+\begin{lstlisting}[language=bash]
+-rwx r-- r--
+ u   g   o
+\end{lstlisting}
+
+También es posible expresar permisos usando números. Los valores son:
+
+\begin{itemize}[nosep]
+  \item lectura: $4$,
+  \item escritura: $2$,
+  \item ejecución: $1$.
+\end{itemize}
+
+Por ejemplo, \texttt{chmod 755 hello.py} asigna permisos de lectura, escritura y ejecución al propietario, y permisos de lectura y ejecución al grupo y al resto:
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ chmod 755 hello.py
+ubuntu@ubuntu:~$ ls -l hello.py
+-rwxr-xr-x 1 ubuntu ubuntu 48 Aug  3 20:00 hello.py
+\end{lstlisting}
 
 Alternativamente es posible ejecutarlo directamente usando python: \lstinline!python3 hello.py!
 
-\subsection{Time}
+\section{Time}
 
 Es posible medir el tiempo de ejecución a los comandos anteponiéndoles el comando \lstinline!time!.
 

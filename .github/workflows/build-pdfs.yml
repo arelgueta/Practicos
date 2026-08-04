@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Practico1-typst-pdf
-          path: TP1-typst/main.pdf
+          path: TP1-typst/Practico1t.pdf
           if-no-files-found: error
 
   release:

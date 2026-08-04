@@ -1,7 +1,7 @@
 TEXLIVE_IMAGE ?= ghcr.io/xu-cheng/texlive-alpine:latest
 TYPST_IMAGE ?= ghcr.io/typst/typst:latest
 TEX_FILES ?= TP1/Practico1.tex
-TYPST_FILES ?= TP1-typst/main.typ
+TYPST_FILES ?= TP1-typst/Practico1t.typ
 WATCH_DIRS := $(sort $(dir $(TEX_FILES) $(TYPST_FILES) TP1/Captura\ desde\ 2026-08-03\ 19-11-55.png))
 
 .PHONY: all pdf typst clean watch

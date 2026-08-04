@@ -15,6 +15,7 @@ on:
       - '**/*.jpeg'
       - '**/*.pdf'
       - '.github/workflows/build-pdfs.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,6 +28,7 @@ jobs:
       tex_extra: ${{ steps.filter.outputs.tex_extra }}
       typst_main: ${{ steps.filter.outputs.typst_main }}
       typst_extra: ${{ steps.filter.outputs.typst_extra }}
+      manual: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Check out repository
@@ -34,6 +36,7 @@ jobs:
 
       - name: Detect document changes
         id: filter
+        if: github.event_name != 'workflow_dispatch'
         uses: dorny/paths-filter@v3
         with:
           filters: |
@@ -74,14 +77,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Compile ${{ matrix.tex_file }}
-        if: needs.changes.outputs[matrix.filter] == 'true'
+        if: needs.changes.outputs.manual == 'true' || needs.changes.outputs[matrix.filter] == 'true'
         uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4
         with:
           root_file: ${{ matrix.tex_file }}
           work_in_root_file_dir: true
 
       - name: Upload PDF artifact
-        if: needs.changes.outputs[matrix.filter] == 'true'
+        if: needs.changes.outputs.manual == 'true' || needs.changes.outputs[matrix.filter] == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -110,7 +113,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Compile ${{ matrix.typ_file }}
-        if: needs.changes.outputs[matrix.filter] == 'true'
+        if: needs.changes.outputs.manual == 'true' || needs.changes.outputs[matrix.filter] == 'true'
         run: |
           docker run --rm \
             --user "$(id -u):$(id -g)" \
@@ -121,7 +124,7 @@ jobs:
               "$(basename '${{ matrix.pdf_file }}')"
 
       - name: Upload Typst PDF artifact
-        if: needs.changes.outputs[matrix.filter] == 'true'
+        if: needs.changes.outputs.manual == 'true' || needs.changes.outputs[matrix.filter] == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -132,11 +135,12 @@ jobs:
     needs: [changes, build, build-typst]
     if: >-
       always() &&
-      github.event_name == 'push' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       github.ref == 'refs/heads/main' &&
       (needs.build.result == 'success' || needs.build.result == 'skipped') &&
       (needs['build-typst'].result == 'success' || needs['build-typst'].result == 'skipped') &&
-      (needs.changes.outputs.tex_main == 'true' ||
+      (needs.changes.outputs.manual == 'true' ||
+       needs.changes.outputs.tex_main == 'true' ||
        needs.changes.outputs.tex_extra == 'true' ||
        needs.changes.outputs.typst_main == 'true' ||
        needs.changes.outputs.typst_extra == 'true')

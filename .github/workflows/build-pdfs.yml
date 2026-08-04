@@ -23,8 +23,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      tex: ${{ steps.filter.outputs.tex }}
-      typst: ${{ steps.filter.outputs.typst }}
+      tex_main: ${{ steps.filter.outputs.tex_main }}
+      tex_extra: ${{ steps.filter.outputs.tex_extra }}
+      typst_main: ${{ steps.filter.outputs.typst_main }}
+      typst_extra: ${{ steps.filter.outputs.typst_extra }}
 
     steps:
       - name: Check out repository
@@ -35,24 +37,24 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            tex:
-              - '**/*.tex'
-              - '**/*.sty'
-              - '**/*.cls'
-              - '**/*.bib'
-              - '**/*.png'
-              - '**/*.jpg'
-              - '**/*.jpeg'
-              - '**/*.pdf'
-            typst:
-              - '**/*.typ'
-              - '**/*.png'
-              - '**/*.jpg'
-              - '**/*.jpeg'
+            tex_main:
+              - 'TP1/Practico1.tex'
+              - 'TP1/*.png'
+              - 'TP1/*.jpg'
+              - 'TP1/*.jpeg'
+            tex_extra:
+              - 'TP1/Practico1-extra.tex'
+            typst_main:
+              - 'TP1-typst/Practico1t.typ'
+              - 'TP1/*.png'
+              - 'TP1/*.jpg'
+              - 'TP1/*.jpeg'
+            typst_extra:
+              - 'TP1-typst/Practico1t-extra.typ'
 
   build:
     needs: changes
-    if: needs.changes.outputs.tex == 'true'
+    if: needs.changes.outputs[matrix.filter] == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -62,6 +64,11 @@ jobs:
           - tex_file: TP1/Practico1.tex
             pdf_file: TP1/Practico1.pdf
             artifact_name: Practico1-pdf
+            filter: tex_main
+          - tex_file: TP1/Practico1-extra.tex
+            pdf_file: TP1/Practico1-extra.pdf
+            artifact_name: Practico1-extra-pdf
+            filter: tex_extra
 
     steps:
       - name: Check out repository
@@ -82,7 +89,7 @@ jobs:
 
   build-typst:
     needs: changes
-    if: needs.changes.outputs.typst == 'true'
+    if: needs.changes.outputs[matrix.filter] == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -92,6 +99,11 @@ jobs:
           - typ_file: TP1-typst/Practico1t.typ
             pdf_file: TP1-typst/Practico1t.pdf
             artifact_name: Practico1t-pdf
+            filter: typst_main
+          - typ_file: TP1-typst/Practico1t-extra.typ
+            pdf_file: TP1-typst/Practico1t-extra.pdf
+            artifact_name: Practico1t-extra-pdf
+            filter: typst_extra
 
     steps:
       - name: Check out repository
@@ -136,10 +148,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p release
-          gh run download "$GITHUB_RUN_ID" --dir release
-          for artifact in release/*; do
+          previous_tag=$(gh release list --limit 100 --json tagName,publishedAt \
+            --jq 'sort_by(.publishedAt) | reverse | map(select(.tagName | startswith("pdfs-"))) | .[0].tagName // ""')
+
+          if [ -n "$previous_tag" ]; then
+            gh release download "$previous_tag" --pattern '*.pdf' --dir release
+          fi
+
+          mkdir -p current
+          gh run download "$GITHUB_RUN_ID" --dir current
+          for artifact in current/*; do
             if [ -d "$artifact" ]; then
-              cp "$artifact"/*.pdf release/
+              cp -f "$artifact"/*.pdf release/
             fi
           done
 

@@ -103,6 +103,7 @@ Se puede intepretar de la siguiente manera:
   `ubuntu@ubuntu`#text(fill: blue)[`:`] $arrow.l$ separador\
   `ubuntu@ubuntu:`#text(fill: blue)[`~`] $arrow.l$ Carpeta actual\
   `ubuntu@ubuntu:~`#text(fill: blue)[`$`] $arrow.l$ Nos indica que estamos en modo usuario; `#` significa `root`.\
+  El símbolo `#` indica que el usuario es `root`, con privilegios administrativos. Esto no significa que el proceso esté ejecutándose en ring 0 ni en modo kernel: los rings son niveles de privilegio de la CPU, mientras que `root` es una cuenta del sistema operativo.
 ]
 
 = Carpetas y archivos

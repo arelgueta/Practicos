@@ -141,6 +141,8 @@ Se puede intepretar de la siguiente manera:
 \texttt{ubuntu@ubuntu}\textcolor{blue}{\texttt{:}} $\leftarrow$ separador\\
 \texttt{ubuntu@ubuntu:}\textcolor{blue}{\texttt{\textasciitilde}} $\leftarrow$ Carpeta actual\\
 \texttt{ubuntu@ubuntu:\textasciitilde}\textcolor{blue}{\texttt{\$}} $\leftarrow$ Nos indica que estamos en modo usuario; \texttt{\#} significa \texttt{root}.
+\par\smallskip
+El símbolo \texttt{\#} indica que el usuario es \texttt{root}, con privilegios administrativos. Esto no significa que el proceso esté ejecutándose en ring 0 ni en modo kernel: los rings son niveles de privilegio de la CPU, mientras que \texttt{root} es una cuenta del sistema operativo.
 \end{notebox}
 
 \section{Carpetas y archivos}

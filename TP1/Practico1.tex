@@ -382,6 +382,23 @@ Podemos observar que el resultado de la syscall \lstinline!openat! es ``3''. Est
 Podemos probar también con un programa simple como \lstinline!pwd! y observar que logra su objetivo primordial haciendo una llamada a la función \lstinline!getcwd!.
 \end{infobox}
 
+\section{Mensajes del kernel: \texttt{dmesg}}
+
+El comando \lstinline!dmesg! muestra mensajes del kernel almacenados en el ring buffer. Es útil para investigar el arranque del sistema, dispositivos, drivers y errores del kernel.
+
+\begin{lstlisting}[language=bash]
+ubuntu@ubuntu:~$ sudo dmesg
+ubuntu@ubuntu:~$ sudo dmesg -H
+ubuntu@ubuntu:~$ sudo dmesg -k
+ubuntu@ubuntu:~$ sudo dmesg -H -k
+\end{lstlisting}
+
+La opción \lstinline!-H! muestra la salida en un formato más legible para humanos. La opción \lstinline!-k! selecciona los mensajes del kernel. Las opciones se pueden combinar.
+
+\begin{infobox}
+Comparar las salidas y buscar mensajes relacionados con dispositivos USB, discos o la interfaz de red.
+\end{infobox}
+
 \section{Editores de texto}
 
 Un editor de texto es un programa como cualquier otro; pero que nos permite editar texto.

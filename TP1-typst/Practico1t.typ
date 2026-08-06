@@ -344,6 +344,23 @@ Podemos observar que el resultado de la syscall `openat` es "3". Esto significa 
   Podemos probar también con un programa simple como `pwd` y observar que logra su objetivo primordial haciendo una llamada a la función `getcwd`.
 ]
 
+= Mensajes del kernel: `dmesg`
+
+El comando `dmesg` muestra mensajes del kernel almacenados en el ring buffer. Es útil para investigar el arranque del sistema, dispositivos, drivers y errores del kernel.
+
+```sh
+ubuntu@ubuntu:~$ sudo dmesg
+ubuntu@ubuntu:~$ sudo dmesg -H
+ubuntu@ubuntu:~$ sudo dmesg -k
+ubuntu@ubuntu:~$ sudo dmesg -H -k
+```
+
+La opción `-H` muestra la salida en un formato más legible para humanos. La opción `-k` selecciona los mensajes del kernel. Las opciones se pueden combinar.
+
+#info[
+  Comparar las salidas y buscar mensajes relacionados con dispositivos USB, discos o la interfaz de red.
+]
+
 = Editores de texto
 
 Un editor de texto es un programa como cualquier otro; pero que nos permite editar texto #emoji.face.inv

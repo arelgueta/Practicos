@@ -1,18 +1,19 @@
-# LaTeX build artifacts
+# Document build artifacts
 *.aux
+*.bbl
+*.bcf
 *.fdb_latexmk
 *.fls
 *.log
+*.nav
 *.out
+*.run.xml
+*.snm
 *.synctex.gz
 *.toc
+*.vrb
+*.xdv
+*.dvi
 
-# Generated PDF
-/TP1/Practico1.pdf
-/TP1/Practico1-extra.pdf
-/TP1-typst/Practico1t.pdf
-/TP1-typst/Practico1t-extra.pdf
-/TP2/Practico2.pdf
-/TP2/Practico2-extra.pdf
-/TP2-typst/Practico2t.pdf
-/TP2-typst/Practico2t-extra.pdf
+# Generated documents
+*.pdf

@@ -12,9 +12,8 @@ on:
       - '**/*.bib'
       - '**/*.png'
       - '**/*.jpg'
-       - '**/*.jpeg'
-       - 'fonts/**'
-       - '**/*.pdf'
+      - '**/*.jpeg'
+      - 'fonts/**'
       - '.github/workflows/build-pdfs.yml'
   workflow_dispatch:
 

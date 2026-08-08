@@ -80,30 +80,30 @@ jobs:
       matrix:
         # Add one entry for each document that should produce a PDF artifact.
         include:
-           - tex_file: TP1/Practico1.tex
-             pdf_file: TP1/Practico1.pdf
-             artifact_name: tp1-latex
-             tp: 1
-             variant: ''
-             filter: tex_main
-           - tex_file: TP1/Practico1-extra.tex
-             pdf_file: TP1/Practico1-extra.pdf
-             artifact_name: tp1-latex-extra
-             tp: 1
-             variant: ' extra'
-             filter: tex_extra
-           - tex_file: TP2/Practico2.tex
-             pdf_file: TP2/Practico2.pdf
-             artifact_name: tp2-latex
-             tp: 2
-             variant: ''
-             filter: tex_tp2
-           - tex_file: TP2/Practico2-extra.tex
-             pdf_file: TP2/Practico2-extra.pdf
-             artifact_name: tp2-latex-extra
-             tp: 2
-             variant: ' extra'
-             filter: tex_tp2_extra
+          - tex_file: TP1/Practico1.tex
+            pdf_file: TP1/Practico1.pdf
+            artifact_name: tp1-latex
+            tp: 1
+            variant: ''
+            filter: tex_main
+          - tex_file: TP1/Practico1-extra.tex
+            pdf_file: TP1/Practico1-extra.pdf
+            artifact_name: tp1-latex-extra
+            tp: 1
+            variant: ' extra'
+            filter: tex_extra
+          - tex_file: TP2/Practico2.tex
+            pdf_file: TP2/Practico2.pdf
+            artifact_name: tp2-latex
+            tp: 2
+            variant: ''
+            filter: tex_tp2
+          - tex_file: TP2/Practico2-extra.tex
+            pdf_file: TP2/Practico2-extra.pdf
+            artifact_name: tp2-latex-extra
+            tp: 2
+            variant: ' extra'
+            filter: tex_tp2_extra
 
     steps:
       - name: Check out repository
@@ -133,36 +133,36 @@ jobs:
       matrix:
         # Add one entry for each Typst document that should produce a PDF artifact.
         include:
-           - typ_file: TP1-typst/Practico1t.typ
-             pdf_file: TP1-typst/Practico1t.pdf
-             artifact_name: tp1-typst
-             tp: 1
-             variant: ''
-             filter: typst_main
-           - typ_file: TP1-typst/Practico1t-extra.typ
-             pdf_file: TP1-typst/Practico1t-extra.pdf
-             artifact_name: tp1-typst-extra
-             tp: 1
-             variant: ' extra'
-             filter: typst_extra
-           - typ_file: TP2-typst/Practico2t.typ
-             pdf_file: TP2-typst/Practico2t.pdf
-             artifact_name: tp2-typst
-             tp: 2
-             variant: ''
-             filter: typst_tp2
-           - typ_file: TP2-typst/Practico2t-extra.typ
-             pdf_file: TP2-typst/Practico2t-extra.pdf
-             artifact_name: tp2-typst-extra
-             tp: 2
-             variant: ' extra'
-             filter: typst_tp2_extra
+          - typ_file: TP1-typst/Practico1t.typ
+            pdf_file: TP1-typst/Practico1t.pdf
+            artifact_name: tp1-typst
+            tp: 1
+            variant: ''
+            filter: typst_main
+          - typ_file: TP1-typst/Practico1t-extra.typ
+            pdf_file: TP1-typst/Practico1t-extra.pdf
+            artifact_name: tp1-typst-extra
+            tp: 1
+            variant: ' extra'
+            filter: typst_extra
+          - typ_file: TP2-typst/Practico2t.typ
+            pdf_file: TP2-typst/Practico2t.pdf
+            artifact_name: tp2-typst
+            tp: 2
+            variant: ''
+            filter: typst_tp2
+          - typ_file: TP2-typst/Practico2t-extra.typ
+            pdf_file: TP2-typst/Practico2t-extra.pdf
+            artifact_name: tp2-typst-extra
+            tp: 2
+            variant: ' extra'
+            filter: typst_tp2_extra
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-       - name: Compile ${{ matrix.typ_file }}
+      - name: Compile ${{ matrix.typ_file }}
         if: needs.changes.outputs.manual == 'true' || needs.changes.outputs[matrix.filter] == 'true'
         run: |
           docker run --rm \

@@ -1,0 +1,248 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{infobox}{
+  colback=blue!6!white, colframe=blue!45!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=INFO, fonttitle=\bfseries, coltitle=blue!45!black,
+  colbacktitle=blue!6!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{notebox}{
+  colback=black!5!white, colframe=black!25!white,
+  arc=2mm, boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  boxsep=1pt, breakable
+}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5}, rulecolor=\color{black!25},
+  frame=single, framerule=0.5pt, basicstyle=\ttfamily\small,
+  breaklines=true, showstringspaces=false, tabsize=4,
+  columns=fullflexible
+}
+\lstset{style=codestyle}
+
+\title{Trabajo Práctico 2 -- Procesos}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Estados y observación de procesos}
+
+Un proceso es un programa que está corriendo. Cada proceso tiene un identificador único, llamado PID, y normalmente mantiene una relación con el proceso que lo creó. El identificador de ese proceso padre se llama PPID.
+
+Con \texttt{ps} (``Process Snapshot'') podés ver procesos. Sin opciones muestra los procesos asociados a la terminal actual:
+
+\begin{lstlisting}[language=bash]
+$ ps
+\end{lstlisting}
+
+Cada vez que ejecutás \texttt{ps}, el shell crea un proceso nuevo, por eso su PID cambia. El shell, en cambio, sigue corriendo y conserva su PID.
+
+Para ver más información y listar procesos de todos los usuarios, probá:
+
+\begin{lstlisting}[language=bash]
+$ ps aux
+$ ps -fu "$USER"
+$ pstree -p
+\end{lstlisting}
+
+La opción \texttt{f} muestra las relaciones padre-hijo como un árbol. Con \texttt{-T -p PID} podés ver los hilos de un proceso:
+
+\begin{lstlisting}[language=bash]
+$ ps -T -p 1234
+\end{lstlisting}
+
+\begin{infobox}
+Consultá las opciones disponibles con \texttt{man ps}. Para salir de los visores interactivos, apretá \texttt{q}.
+\end{infobox}
+
+\subsection{Comando \texttt{top}}
+
+Con \texttt{top} podés ver los procesos ordenados por consumo de recursos. La lista se actualiza periódicamente y el orden puede cambiar porque el planificador selecciona procesos según su prioridad dinámica.
+
+\begin{lstlisting}[language=bash]
+$ top
+$ top -H
+\end{lstlisting}
+
+La opción \texttt{-H} muestra los hilos. También podés usar \texttt{htop}, que ofrece una interfaz interactiva más cómoda.
+
+\section{El sistema de archivos \texttt{/proc}}
+
+\texttt{/proc} es un sistema de archivos virtual que genera el núcleo. No representa un dispositivo de almacenamiento: sirve para consultar información sobre procesos, memoria, CPU y otras partes del sistema.
+
+Hay un directorio numérico por cada proceso activo. El enlace \texttt{/proc/self} apunta al proceso que lo está consultando:
+
+\begin{lstlisting}[language=bash]
+$ ls -l /proc/self
+lrwxrwxrwx 1 root root 0 ... /proc/self -> 4856
+$ ls -l /proc/self
+lrwxrwxrwx 1 root root 0 ... /proc/self -> 4857
+\end{lstlisting}
+
+Dentro de cada directorio de proceso hay archivos como \texttt{status}. Ahí podés encontrar el estado, el PID, el PPID y los cambios de contexto:
+
+\begin{lstlisting}[language=bash]
+$ grep ctxt /proc/self/status
+voluntary_ctxt_switches: 0
+nonvoluntary_ctxt_switches: 2
+\end{lstlisting}
+
+\begin{extrabox}
+También podés explorar \texttt{/proc/cpuinfo}, \texttt{/proc/meminfo} y \texttt{/proc/interrupts}. Compará esa información con la salida de los comandos del sistema.
+\end{extrabox}
+
+\section{PID y proceso padre}
+
+POSIX ofrece llamadas al sistema para consultar la identidad de un proceso. Las funciones que vamos a usar son:
+
+\begin{lstlisting}[language=C]
+pid_t getpid(void);
+pid_t getppid(void);
+\end{lstlisting}
+
+Creá el archivo \texttt{obtenerpid.c} con este contenido:
+
+\begin{lstlisting}[language=C]
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(void) {
+    printf("PID: %d\n", getpid());
+    printf("PPID: %d\n", getppid());
+    return 0;
+}
+\end{lstlisting}
+
+Compilalo y ejecutalo:
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -o obtenerpid obtenerpid.c
+$ ./obtenerpid
+PID: 7014
+PPID: 3814
+$ strace ./obtenerpid
+\end{lstlisting}
+
+\begin{extrabox}
+Investigá qué hacen las opciones \texttt{-Wall} y \texttt{-Wextra}. Podés consultar \texttt{man gcc} o buscar la documentación online. Después, compilá el programa con y sin esas opciones y compará los mensajes del compilador.
+\end{extrabox}
+
+El PPID normalmente corresponde al shell que lanzó el programa. Con \texttt{strace} podés ver las llamadas al sistema que hace durante su ejecución.
+
+\section{Creación de procesos: \texttt{fork()} y \texttt{exec()} }
+
+\texttt{fork()} crea un proceso hijo como copia del proceso que lo invoca. Su valor de retorno te permite distinguir los dos caminos: $-1$ indica un error, $0$ identifica al hijo y un valor positivo identifica al padre.
+
+\begin{lstlisting}[language=C]
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(void) {
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        return 1;
+    }
+    if (pid == 0)
+        printf("Hijo: PID=%d PPID=%d\n", getpid(), getppid());
+    else
+        printf("Padre: PID=%d PPID=%d\n", getpid(), getppid());
+    return 0;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -o creaproceso creaproceso.c
+$ ./creaproceso
+Padre: PID=7094 PPID=3814
+Hijo: PID=7095 PPID=7094
+$ strace -f ./creaproceso
+\end{lstlisting}
+
+La llamada \texttt{exec()} reemplaza el programa que está corriendo por otro. El shell suele crear un hijo con \texttt{fork()} y después cargar ahí el comando pedido mediante una variante de \texttt{exec()}.
+
+\section{Hilos POSIX}
+
+Los hilos te permiten ejecutar varias secuencias dentro del mismo proceso. Comparten la memoria del proceso, pero cada uno tiene su propio estado de ejecución.
+
+El siguiente ejemplo crea dos hilos que escriben indefinidamente:
+
+\begin{lstlisting}[language=C]
+#include <pthread.h>
+#include <stdio.h>
+
+void *saludar(void *arg) {
+    const char *texto = arg;
+    while (1) printf("%s\n", texto);
+    return NULL;
+}
+
+int main(void) {
+    pthread_t uno, dos;
+    pthread_create(&uno, NULL, saludar, "Hola");
+    pthread_create(&dos, NULL, saludar, "mundo");
+    pthread_join(uno, NULL);
+    pthread_join(dos, NULL);
+    return 0;
+}
+\end{lstlisting}
+
+Compilalo enlazando la biblioteca POSIX de hilos. Para detenerlo, apretá \texttt{Ctrl-C}:
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -pthread -o holahilo holahilo.c
+$ ./holahilo
+Hola
+mundo
+...
+\end{lstlisting}
+
+\begin{extrabox}
+Compará la salida de \texttt{ps -T -p PID} antes y después de crear los hilos. Repetí las pruebas con \texttt{strace -f} y fijate qué cambia entre procesos e hilos.
+\end{extrabox}
+
+\end{document}

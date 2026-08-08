@@ -1,0 +1,167 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{trackbox}[1]{
+  colback=green!7!white, colframe=green!45!black,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=TRACK -- #1, fonttitle=\bfseries, coltitle=green!35!black,
+  colbacktitle=green!7!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{pointsextrabox}{
+  colback=red!7!white, colframe=red!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=BONUS · POR PUNTOS \coin, fonttitle=\bfseries, coltitle=red!55!black,
+  colbacktitle=red!7!white, boxsep=1pt, breakable
+}
+
+\newcommand{\coin}{\raisebox{0.1ex}{\tikz{\draw[fill=yellow!60!orange] (0,0) circle (0.5ex);}}}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5}, rulecolor=\color{black!25},
+  frame=single, framerule=0.5pt, basicstyle=\ttfamily\small,
+  breaklines=true, showstringspaces=false, tabsize=4,
+  columns=fullflexible
+}
+\lstset{style=codestyle}
+
+\title{Trabajo Práctico 2 -- Ejercicios extra}
+\author{}
+\date{}
+
+\begin{document}
+\renewcommand{\contentsname}{Tracks}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+Estos tracks amplían la práctica de procesos con problemas pequeños pero cercanos a herramientas reales. Podés empezar por cualquier track. Cada uno tiene una parte principal y una extensión para seguir investigando.
+
+\section{Señales y control de trabajos (5/10)}
+
+\begin{trackbox}{5/10}
+\textbf{Descripción:} usar señales para pausar, continuar y terminar procesos. Es una base práctica para administrar servidores y depurar programas.
+\end{trackbox}
+
+\begin{enumerate}
+  \item Ejecutar \texttt{sleep 100} en foreground y detenerlo con \texttt{Ctrl-Z}.
+  \item Consultar el trabajo con \texttt{jobs}, continuarlo en background con \texttt{bg} y traerlo nuevamente con \texttt{fg}.
+  \item Encontrar su PID y enviar \texttt{SIGSTOP}, \texttt{SIGCONT} y \texttt{SIGTERM} usando \texttt{kill}.
+  \item Comparar \texttt{SIGTERM} con \texttt{SIGKILL}. Explicar por qué un programa no puede capturar \texttt{SIGKILL}.
+  \item Escribir un programa que instale un handler para \texttt{SIGINT}, cuente cuántas veces recibió la señal y termine limpiamente con la segunda.
+\end{enumerate}
+
+\begin{extrabox}
+Investigá la diferencia entre una señal estándar y una señal encolada. Usá \texttt{kill -l}, \texttt{man 7 signal} y \texttt{sigaction()}.
+\end{extrabox}
+
+\newpage
+\section{Mini-shell con \texttt{fork()} y \texttt{exec()} (7/10)}
+
+\begin{trackbox}{7/10}
+\textbf{Descripción:} construir una versión mínima del mecanismo que usa un shell real. Integra parsing, creación de procesos, ejecución y espera.
+\end{trackbox}
+
+\begin{enumerate}
+  \item Leer una línea usando \texttt{fgets()} y separar el comando de sus argumentos.
+  \item Crear un hijo con \texttt{fork()} y ejecutar el comando con \texttt{execvp()}.
+  \item Hacer que el padre espere al hijo con \texttt{waitpid()}.
+  \item Implementar el comando interno \texttt{cd}, que debe ejecutarse en el proceso del shell.
+  \item Agregar ejecución en background cuando la línea termina en \texttt{\&}.
+  \item Informar errores de \texttt{fork()}, \texttt{execvp()} y \texttt{waitpid()} con \texttt{perror()}.
+\end{enumerate}
+
+\begin{lstlisting}[language=C]
+if (fork() == 0) {
+    execvp(args[0], args);
+    perror("execvp");
+    _exit(127);
+}
+wait(NULL);
+\end{lstlisting}
+
+\begin{pointsextrabox}
+Agregá una tubería entre dos comandos usando \texttt{pipe()}, \texttt{dup2()} y dos procesos hijo. Probá ejecutar \texttt{ps aux | grep bash}.
+\end{pointsextrabox}
+
+\newpage
+\section{Carreras y sincronización entre hilos (7/10)}
+
+\begin{trackbox}{7/10}
+\textbf{Descripción:} observar una condición de carrera y corregirla con un mutex. Es una práctica directamente útil para programación concurrente.
+\end{trackbox}
+
+\begin{enumerate}
+  \item Crear diez hilos que incrementen un contador global un millón de veces cada uno.
+  \item Ejecutar varias veces y comparar el resultado con el valor esperado.
+  \item Explicar por qué \texttt{contador++} no es una operación indivisible.
+  \item Proteger el incremento usando un mutex:
+    \begin{lstlisting}[language=C]
+pthread_mutex_lock(&mutex);
+contador++;
+pthread_mutex_unlock(&mutex);
+    \end{lstlisting}
+  \item Medir el tiempo con y sin mutex usando \texttt{time}.
+  \item Confirmar la cantidad de hilos con \texttt{ps -T}.
+\end{enumerate}
+
+\begin{extrabox}
+Compará el mutex con operaciones atómicas usando \texttt{stdatomic.h}. Investigá por qué una solución correcta puede ser más lenta y cuándo conviene cada alternativa.
+\end{extrabox}
+
+\newpage
+\section{Cambios de contexto y rendimiento (8/10)}
+
+\begin{trackbox}{8/10}
+\textbf{Descripción:} medir qué costo tiene alternar entre procesos e hilos. Conecta el modelo teórico del planificador con datos observables.
+\end{trackbox}
+
+\begin{enumerate}
+  \item Crear un programa que haga trabajo de CPU durante varios segundos.
+  \item Medir cambios de contexto voluntarios y no voluntarios antes y después usando \texttt{/proc/PID/status}.
+  \item Comparar un proceso que usa \texttt{sleep()} con otro que ocupa la CPU en un loop.
+  \item Ejecutar dos copias del programa y observar el efecto sobre cambios de contexto y tiempo de ejecución.
+  \item Repetir la medición con dos hilos y explicar qué resultados esperás encontrar.
+  \item Registrar resultados en una tabla y distinguir una hipótesis de una observación.
+\end{enumerate}
+
+\begin{pointsextrabox}
+Usá \texttt{taskset} para fijar la afinidad a un núcleo y repetí el experimento. Investigá también \texttt{getrusage()} y la diferencia entre tiempo de usuario y tiempo de sistema.
+\end{pointsextrabox}
+
+\end{document}

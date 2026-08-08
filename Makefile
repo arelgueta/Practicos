@@ -1,8 +1,9 @@
 TEXLIVE_IMAGE ?= ghcr.io/xu-cheng/texlive-alpine:latest
 TYPST_IMAGE ?= ghcr.io/typst/typst:latest
-TEX_FILES ?= TP1/Practico1.tex TP1/Practico1-extra.tex
-TYPST_FILES ?= TP1-typst/Practico1t.typ TP1-typst/Practico1t-extra.typ
-WATCH_DIRS := $(sort $(dir $(TEX_FILES) $(TYPST_FILES) TP1/Captura\ desde\ 2026-08-03\ 19-11-55.png))
+FONTS_DIR ?= fonts
+TEX_FILES ?= TP1/Practico1.tex TP1/Practico1-extra.tex TP2/Practico2.tex TP2/Practico2-extra.tex
+TYPST_FILES ?= TP1-typst/Practico1t.typ TP1-typst/Practico1t-extra.typ TP2-typst/Practico2t.typ TP2-typst/Practico2t-extra.typ
+WATCH_DIRS := $(sort $(dir $(TEX_FILES) $(TYPST_FILES) TP1/Captura\ desde\ 2026-08-03\ 19-11-55.png) $(FONTS_DIR)/)
 
 .PHONY: all pdf typst clean watch
 
@@ -34,7 +35,8 @@ typst:
 			-v "$(CURDIR):/work" \
 			-w "/work/$$dir" \
 			"$(TYPST_IMAGE)" \
-			compile --root /work "$$file" "$${file%.typ}.pdf"; \
+			compile --root /work --font-path "/work/$(FONTS_DIR)" \
+				"$$file" "$${file%.typ}.pdf"; \
 	done
 
 clean:

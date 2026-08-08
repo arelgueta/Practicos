@@ -12,8 +12,9 @@ on:
       - '**/*.bib'
       - '**/*.png'
       - '**/*.jpg'
-      - '**/*.jpeg'
-      - '**/*.pdf'
+       - '**/*.jpeg'
+       - 'fonts/**'
+       - '**/*.pdf'
       - '.github/workflows/build-pdfs.yml'
   workflow_dispatch:
 
@@ -26,8 +27,12 @@ jobs:
     outputs:
       tex_main: ${{ steps.filter.outputs.tex_main }}
       tex_extra: ${{ steps.filter.outputs.tex_extra }}
+      tex_tp2: ${{ steps.filter.outputs.tex_tp2 }}
+      tex_tp2_extra: ${{ steps.filter.outputs.tex_tp2_extra }}
       typst_main: ${{ steps.filter.outputs.typst_main }}
       typst_extra: ${{ steps.filter.outputs.typst_extra }}
+      typst_tp2: ${{ steps.filter.outputs.typst_tp2 }}
+      typst_tp2_extra: ${{ steps.filter.outputs.typst_tp2_extra }}
       manual: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
@@ -47,15 +52,28 @@ jobs:
               - 'TP1/*.jpeg'
             tex_extra:
               - 'TP1/Practico1-extra.tex'
+            tex_tp2:
+              - 'TP2/Practico2.tex'
+            tex_tp2_extra:
+              - 'TP2/Practico2-extra.tex'
             typst_main:
               - 'TP1-typst/Practico1t.typ'
               - 'TP1/*.png'
               - 'TP1/*.jpg'
               - 'TP1/*.jpeg'
+              - 'fonts/**'
             typst_extra:
               - 'TP1-typst/Practico1t-extra.typ'
+              - 'fonts/**'
+            typst_tp2:
+              - 'TP2-typst/Practico2t.typ'
+              - 'fonts/**'
+            typst_tp2_extra:
+              - 'TP2-typst/Practico2t-extra.typ'
+              - 'fonts/**'
 
   build:
+    name: LaTeX TP${{ matrix.tp }}${{ matrix.variant }}
     needs: changes
     runs-on: ubuntu-latest
     strategy:
@@ -63,14 +81,30 @@ jobs:
       matrix:
         # Add one entry for each document that should produce a PDF artifact.
         include:
-          - tex_file: TP1/Practico1.tex
-            pdf_file: TP1/Practico1.pdf
-            artifact_name: Practico1-pdf
-            filter: tex_main
-          - tex_file: TP1/Practico1-extra.tex
-            pdf_file: TP1/Practico1-extra.pdf
-            artifact_name: Practico1-extra-pdf
-            filter: tex_extra
+           - tex_file: TP1/Practico1.tex
+             pdf_file: TP1/Practico1.pdf
+             artifact_name: tp1-latex
+             tp: 1
+             variant: ''
+             filter: tex_main
+           - tex_file: TP1/Practico1-extra.tex
+             pdf_file: TP1/Practico1-extra.pdf
+             artifact_name: tp1-latex-extra
+             tp: 1
+             variant: ' extra'
+             filter: tex_extra
+           - tex_file: TP2/Practico2.tex
+             pdf_file: TP2/Practico2.pdf
+             artifact_name: tp2-latex
+             tp: 2
+             variant: ''
+             filter: tex_tp2
+           - tex_file: TP2/Practico2-extra.tex
+             pdf_file: TP2/Practico2-extra.pdf
+             artifact_name: tp2-latex-extra
+             tp: 2
+             variant: ' extra'
+             filter: tex_tp2_extra
 
     steps:
       - name: Check out repository
@@ -92,6 +126,7 @@ jobs:
           if-no-files-found: error
 
   build-typst:
+    name: Typst TP${{ matrix.tp }}${{ matrix.variant }}
     needs: changes
     runs-on: ubuntu-latest
     strategy:
@@ -99,20 +134,36 @@ jobs:
       matrix:
         # Add one entry for each Typst document that should produce a PDF artifact.
         include:
-          - typ_file: TP1-typst/Practico1t.typ
-            pdf_file: TP1-typst/Practico1t.pdf
-            artifact_name: Practico1t-pdf
-            filter: typst_main
-          - typ_file: TP1-typst/Practico1t-extra.typ
-            pdf_file: TP1-typst/Practico1t-extra.pdf
-            artifact_name: Practico1t-extra-pdf
-            filter: typst_extra
+           - typ_file: TP1-typst/Practico1t.typ
+             pdf_file: TP1-typst/Practico1t.pdf
+             artifact_name: tp1-typst
+             tp: 1
+             variant: ''
+             filter: typst_main
+           - typ_file: TP1-typst/Practico1t-extra.typ
+             pdf_file: TP1-typst/Practico1t-extra.pdf
+             artifact_name: tp1-typst-extra
+             tp: 1
+             variant: ' extra'
+             filter: typst_extra
+           - typ_file: TP2-typst/Practico2t.typ
+             pdf_file: TP2-typst/Practico2t.pdf
+             artifact_name: tp2-typst
+             tp: 2
+             variant: ''
+             filter: typst_tp2
+           - typ_file: TP2-typst/Practico2t-extra.typ
+             pdf_file: TP2-typst/Practico2t-extra.pdf
+             artifact_name: tp2-typst-extra
+             tp: 2
+             variant: ' extra'
+             filter: typst_tp2_extra
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Compile ${{ matrix.typ_file }}
+       - name: Compile ${{ matrix.typ_file }}
         if: needs.changes.outputs.manual == 'true' || needs.changes.outputs[matrix.filter] == 'true'
         run: |
           docker run --rm \
@@ -120,7 +171,8 @@ jobs:
             -v "$PWD:/work" \
             -w "/work/$(dirname '${{ matrix.typ_file }}')" \
             ghcr.io/typst/typst:latest \
-            compile --root /work "$(basename '${{ matrix.typ_file }}')" \
+            compile --root /work --font-path /work/fonts \
+              "$(basename '${{ matrix.typ_file }}')" \
               "$(basename '${{ matrix.pdf_file }}')"
 
       - name: Upload Typst PDF artifact
@@ -142,8 +194,12 @@ jobs:
       (needs.changes.outputs.manual == 'true' ||
        needs.changes.outputs.tex_main == 'true' ||
        needs.changes.outputs.tex_extra == 'true' ||
+       needs.changes.outputs.tex_tp2 == 'true' ||
+       needs.changes.outputs.tex_tp2_extra == 'true' ||
        needs.changes.outputs.typst_main == 'true' ||
-       needs.changes.outputs.typst_extra == 'true')
+       needs.changes.outputs.typst_extra == 'true' ||
+       needs.changes.outputs.typst_tp2 == 'true' ||
+       needs.changes.outputs.typst_tp2_extra == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write

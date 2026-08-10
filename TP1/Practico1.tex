@@ -22,6 +22,7 @@
 
 % ---------- Listas ----------
 \usepackage{enumitem}
+\usepackage{tabularx}
 
 % ---------- Enlaces (para el índice, opcional) ----------
 \usepackage[hidelinks]{hyperref}
@@ -66,6 +67,12 @@
 \newtcolorbox{notebox}{
   colback=black!5!white, colframe=black!25!white,
   arc=2mm, boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  boxsep=1pt, breakable
+}
+
+\newtcolorbox{promptbox}{
+  colback=black!5!white, colframe=black!25!white,
+  arc=2mm, boxrule=0.5pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
   boxsep=1pt, breakable
 }
 
@@ -134,16 +141,19 @@ Esta se llama ``prompt'' y singifica que esta a la espera de un comando.
 
 Se puede intepretar de la siguiente manera:
 
-\begin{notebox}
-\textcolor{blue}{\texttt{ubuntu}} $\leftarrow$ nombre de usuario\\
-\texttt{ubuntu}\textcolor{blue}{\texttt{\#}} $\leftarrow$ se lee ``at'' y significa ``en''\\
-\texttt{ubuntu@}\textcolor{blue}{\texttt{ubuntu}} $\leftarrow$ el nombre de la maquina\\
-\texttt{ubuntu@ubuntu}\textcolor{blue}{\texttt{:}} $\leftarrow$ separador\\
-\texttt{ubuntu@ubuntu:}\textcolor{blue}{\texttt{\textasciitilde}} $\leftarrow$ Carpeta actual\\
-\texttt{ubuntu@ubuntu:\textasciitilde}\textcolor{blue}{\texttt{\$}} $\leftarrow$ Nos indica que estamos en modo usuario; \texttt{\#} significa \texttt{root}.
+\begin{promptbox}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabularx}{\linewidth}{@{}l c X@{}}
+\textcolor{blue}{\texttt{ubuntu}} & $\leftarrow$ & nombre de usuario\\
+\texttt{ubuntu}\textcolor{blue}{\texttt{\#}} & $\leftarrow$ & se lee ``at'' y significa ``en''\\
+\texttt{ubuntu@}\textcolor{blue}{\texttt{ubuntu}} & $\leftarrow$ & el nombre de la maquina\\
+\texttt{ubuntu@ubuntu}\textcolor{blue}{\texttt{:}} & $\leftarrow$ & separador\\
+\texttt{ubuntu@ubuntu:}\textcolor{blue}{\texttt{\textasciitilde}} & $\leftarrow$ & carpeta actual\\
+\texttt{ubuntu@ubuntu:\textasciitilde}\textcolor{blue}{\texttt{\$}} & $\leftarrow$ & indica que estamos en modo usuario; \texttt{\#} significa \texttt{root}.
+\end{tabularx}
 \par\smallskip
 El símbolo \texttt{\#} indica que el usuario es \texttt{root}, con privilegios administrativos. Esto no significa que el proceso esté ejecutándose en ring 0 ni en modo kernel: los rings son niveles de privilegio de la CPU, mientras que \texttt{root} es una cuenta del sistema operativo.
-\end{notebox}
+\end{promptbox}
 
 \section{Carpetas y archivos}
 

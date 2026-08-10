@@ -21,8 +21,6 @@
 
 #let frame = x => rect(fill: black.transparentize(90%), stroke: black.transparentize(30%), width: 100%, radius: 0.5em, inset: 0.5em, x)
 
-#let promptframe = x => rect(fill: black.transparentize(90%), stroke: black.transparentize(30%), width: 100%, radius: 0.5em, inset: 0.35em, x)
-
 
 
 #align(center + horizon)[
@@ -98,18 +96,13 @@ Esta se llama "prompt" y singifica que esta a la espera de un comando.
 Se puede intepretar de la siguiente manera:
 
 
-#promptframe[
-  #grid(
-    columns: (auto, auto, 1fr),
-    column-gutter: 0.5em,
-    row-gutter: 0.25em,
-    [#text(fill: blue)[`ubuntu`]], [$arrow.l$], [nombre de usuario],
-    [`ubuntu`#text(fill: blue)[`#`]], [$arrow.l$], [se lee "at" y significa "en"],
-    [`ubuntu@`#text(fill: blue)[`ubuntu`]], [$arrow.l$], [el nombre de la maquina],
-    [`ubuntu@ubuntu`#text(fill: blue)[`:`]], [$arrow.l$], [separador],
-    [`ubuntu@ubuntu:`#text(fill: blue)[`~`]], [$arrow.l$], [carpeta actual],
-    [`ubuntu@ubuntu:~`#text(fill: blue)[`$`]], [$arrow.l$], [indica que estamos en modo usuario; `#` significa `root`],
-  )
+#frame[
+  #text(fill: blue)[`ubuntu`] $arrow.l$ nombre de usuario\
+  `ubuntu`#text(fill: blue)[`#`] $arrow.l$ se lee "at" y significa "en"\
+  `ubuntu@`#text(fill: blue)[`ubuntu`] $arrow.l$ el nombre de la maquina\
+  `ubuntu@ubuntu`#text(fill: blue)[`:`] $arrow.l$ separador\
+  `ubuntu@ubuntu:`#text(fill: blue)[`~`] $arrow.l$ Carpeta actual\
+  `ubuntu@ubuntu:~`#text(fill: blue)[`$`] $arrow.l$ Nos indica que estamos en modo usuario; `#` significa `root`.\
   El símbolo `#` indica que el usuario es `root`, con privilegios administrativos. Esto no significa que el proceso esté ejecutándose en ring 0 ni en modo kernel: los rings son niveles de privilegio de la CPU, mientras que `root` es una cuenta del sistema operativo.
 ]
 

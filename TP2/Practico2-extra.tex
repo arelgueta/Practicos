@@ -83,7 +83,7 @@ Estos tracks amplían la práctica de procesos con problemas pequeños pero cerc
   \item Consultar el trabajo con \texttt{jobs}, continuarlo en background con \texttt{bg} y traerlo nuevamente con \texttt{fg}.
   \item Encontrar su PID y enviar \texttt{SIGSTOP}, \texttt{SIGCONT} y \texttt{SIGTERM} usando \texttt{kill}.
   \item Comparar \texttt{SIGTERM} con \texttt{SIGKILL}. Explicar por qué un programa no puede capturar \texttt{SIGKILL}.
-  \item Escribir un programa que instale un handler para \texttt{SIGINT}, cuente cuántas veces recibió la señal y termine limpiamente con la segunda.
+  \item Escribir un programa que instale un handler para \texttt{SIGINT}, cuente cuántas veces recibió la señal y termine limpiamente con un EOF (\texttt{Ctrl+D}) por \texttt{STDIN}.
 \end{enumerate}
 
 \begin{extrabox}

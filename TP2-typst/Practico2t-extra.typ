@@ -47,7 +47,7 @@ Estos tracks amplían la práctica de procesos con problemas pequeños pero cerc
 2. Consultar trabajo con `jobs`, continuarlo en background con `bg` y traerlo nuevamente con `fg`.
 3. Encontrar PID y enviar `SIGSTOP`, `SIGCONT` y `SIGTERM` usando `kill`.
 4. Comparar `SIGTERM` con `SIGKILL`. Explicar por qué un programa no puede capturar `SIGKILL`.
-5. Escribir programa que instale handler para `SIGINT`, cuente cuántas veces recibió señal y termine limpiamente con segunda.
+5. Escribir programa que instale handler para `SIGINT`, cuente cuántas veces recibió señal y termine limpiamente con un EOF (`Ctrl+D`) por `STDIN`.
 
 #extra[Investigá diferencia entre señal estándar y señal encolada. Usá `kill -l`, `man 7 signal` y `sigaction()`.]
 

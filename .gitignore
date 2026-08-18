@@ -17,3 +17,9 @@
 
 # Generated documents
 *.pdf
+
+# Python test caches
+__pycache__/
+*.pyc
+
+old/

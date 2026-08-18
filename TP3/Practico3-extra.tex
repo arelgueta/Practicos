@@ -1,0 +1,367 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{etoolbox}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{trackbox}[1]{
+  colback=green!7!white, colframe=green!45!black,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=TRACK -- #1, fonttitle=\bfseries, coltitle=green!35!black,
+  colbacktitle=green!7!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{bonusbox}{
+  colback=red!7!white, colframe=red!55!black,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=BONUS -- POR PUNTOS, fonttitle=\bfseries, coltitle=red!55!black,
+  colbacktitle=red!7!white, boxsep=1pt, breakable
+}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5}, rulecolor=\color{black!25},
+  frame=single, framerule=0.5pt, basicstyle=\ttfamily\small,
+  breaklines=true, showstringspaces=false, tabsize=4,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!70!black},
+  columns=fullflexible
+}
+\lstset{style=codestyle}
+\BeforeBeginEnvironment{lstlisting}{%
+  \par\addvspace{0.2\baselineskip}\noindent
+  \begin{minipage}{\linewidth}}
+\AfterEndEnvironment{lstlisting}{%
+  \end{minipage}\par\addvspace{0.2\baselineskip}}
+\newcommand{\inputcode}[2][]{%
+  \par\addvspace{0.2\baselineskip}\noindent
+  \begin{minipage}{\linewidth}
+    \lstinputlisting[#1]{#2}
+  \end{minipage}\par\addvspace{0.2\baselineskip}}
+\setlist{nosep}
+
+\title{Trabajo Práctico 3 -- Ejercicios extra}
+\author{}
+\date{}
+
+\begin{document}
+\renewcommand{\contentsname}{Tracks}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+Estos tracks amplían el práctico de memoria con experimentos comparables.
+Registrá arquitectura, versión de \texttt{gcc} y opciones de compilación; las
+direcciones concretas no son portables, así que explicá patrones, permisos,
+tamaños y relaciones.
+
+Los tracks son independientes entre sí: elegí uno después de completar el
+práctico regular y no necesitás resolver otro track para empezar. Las cajas
+\textbf{EXTRA} proponen una extensión opcional del track; las cajas
+\textbf{BONUS -- POR PUNTOS} plantean una implementación más profunda. El
+práctico regular no requiere un informe; para obtener puntos de bonus, entregá
+una explicación breve con capturas y quedate disponible para una demostración.
+
+\newpage
+\section[Páginas bajo demanda y memoria residente (7/10)]{Páginas bajo demanda y memoria residente\\[-2pt](7/10)}
+
+\begin{trackbox}{7/10}
+\textbf{Descripción:} diferenciar el espacio virtual reservado de las páginas
+tocadas y residentes.
+\end{trackbox}
+
+Escribí un programa \texttt{demanda.c} que demuestre la paginación bajo
+demanda (\emph{demand paging}). Observá los campos \texttt{Vm*} de
+\texttt{/proc/<pid>/status}; provocá accesos a páginas nuevas y registrá los
+fallos \texttt{minflt}/\texttt{majflt} de \texttt{/proc/<pid>/stat}. Relacioná
+esos fallos con los cambios que observes en
+\texttt{/proc/<pid>/smaps\_rollup} y explicá el resultado.
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -O0 -g demanda.c -o demanda
+$ ./demanda &
+$ pid=$!
+$ grep '^Vm' /proc/$pid/status
+$ awk '{printf "minflt=%s majflt=%s\n", $10, $12}' /proc/$pid/stat
+$ cat /proc/$pid/smaps_rollup
+$ wait $pid
+\end{lstlisting}
+
+\begin{extrabox}
+Formulá una hipótesis antes de tocar las páginas. Explicá por qué
+\texttt{malloc()} puede aumentar \texttt{VmSize} sin aumentar inmediatamente
+\texttt{VmRSS}, y qué evento provoca la primera escritura en cada página.
+\end{extrabox}
+
+\newpage
+\section{\texttt{mmap()}, permisos y regiones anónimas (7/10)}
+
+\begin{trackbox}{7/10}
+\textbf{Descripción:} crear y modificar mapeos explícitos para relacionar
+llamadas al sistema, permisos y entradas de \texttt{maps}.
+\end{trackbox}
+
+\begin{enumerate}[leftmargin=*]
+  \item Reservar una región anónima con \texttt{mmap()} usando
+  \texttt{PROT\_READ} $|$ \texttt{PROT\_WRITE} y
+  \texttt{MAP\_PRIVATE} $|$ \texttt{MAP\_ANONYMOUS}.
+  \item Imprimir la dirección, escribir en la primera y última página y
+  localizar la región en \texttt{/proc/<pid>/maps}.
+  \item Usar \texttt{mprotect()} para quitar escritura y volver a inspeccionar.
+  \item Mapear un archivo real con \texttt{MAP\_PRIVATE}, modificar un byte
+  mediante el mapeo y comprobar que el archivo no cambia. Explicá qué significa
+  que la modificación sea privada y contrastá, opcionalmente, con
+  \texttt{MAP\_SHARED}.
+  \item Liberar las regiones con \texttt{munmap()} y comprobar que desaparecen.
+\end{enumerate}
+
+\begin{lstlisting}[language=C]
+void *region = mmap(NULL, 4 * 4096,
+                    PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+if (region == MAP_FAILED)
+    perror("mmap");
+
+if (mprotect(region, 4 * 4096, PROT_READ) == -1)
+    perror("mprotect");
+\end{lstlisting}
+
+Usá \texttt{pmap -x <pid>} como vista alternativa y compará sus columnas con
+\texttt{maps}. Investigá por qué una región privada puede compartir páginas
+físicamente mediante \emph{copy-on-write}.
+
+\newpage
+\section{Intercambio y presión de memoria (2/10)}
+
+\begin{trackbox}{2/10}
+\textbf{Descripción:} activar temporalmente un archivo de intercambio
+(\emph{swapfile}) y observar cómo aparece en las herramientas del sistema.
+\end{trackbox}
+
+Trabajá en una máquina de prueba y usá un archivo descartable. Necesitás
+privilegios para ejecutar \texttt{swapon}; no modifiques \texttt{/etc/fstab},
+no uses \texttt{swapoff -a} y no desactives particiones o archivos de
+intercambio que ya estuvieran activos. El archivo debe estar en un sistema de
+archivos que admita swapfiles.
+
+Desde un directorio con espacio libre, creá y activá un archivo de 256 MiB:
+
+\begin{lstlisting}[language=bash]
+$ swapon --show
+$ df -h .
+$ fallocate -l 256M swapfile-demo
+$ chmod 600 swapfile-demo
+$ sudo mkswap swapfile-demo
+$ sudo swapon swapfile-demo
+$ swapon --show
+$ cat /proc/swaps
+$ free -h
+\end{lstlisting}
+
+Si \texttt{fallocate} no está disponible o el sistema de archivos rechaza el
+archivo, investigá una alternativa que cree un archivo completamente
+asignado, por ejemplo:
+
+\begin{lstlisting}[language=bash]
+$ dd if=/dev/zero of=swapfile-demo bs=1M count=256 status=progress
+\end{lstlisting}
+
+Mientras ejecutás una carga de memoria
+moderada, observá \texttt{vmstat 1}, \texttt{free -h} y
+\texttt{/proc/meminfo}. Distinguí entre tener swap habilitado y que el núcleo
+efectivamente mueva páginas hacia él; no es necesario agotar la memoria de la
+máquina para realizar la observación.
+
+Al terminar, desactivá solamente el archivo de la práctica, comprobá que ya no
+aparece y recién después borrálo:
+
+\begin{lstlisting}[language=bash]
+$ sudo swapoff swapfile-demo
+$ swapon --show
+$ rm swapfile-demo
+\end{lstlisting}
+
+Si \texttt{swapoff} falla porque el archivo todavía está en uso, no lo borres.
+
+\newpage
+\section{Bibliotecas compartidas y resolución de símbolos (5/10)}
+
+\begin{trackbox}{5/10}
+\textbf{Descripción:} investigar cómo el cargador encuentra una biblioteca
+compartida y cuándo resuelve un símbolo del ejecutable.
+\end{trackbox}
+
+Partí de los archivos \texttt{saludo.c} y \texttt{main.c} del TP3 regular:
+\texttt{saludo.c} define la función de la biblioteca y \texttt{main.c} la
+invoca. Construí una variante dinámica sin una ruta de búsqueda incrustada,
+para que puedas investigar cómo el cargador encuentra \texttt{libsaludo.so}:
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -fPIC -shared saludo.c \
+    -Wl,-soname,libsaludo.so -o libsaludo.so
+$ gcc -Wall -Wextra main.c -L. -lsaludo -o saludo
+$ ldd ./saludo
+$ readelf -dW ./saludo
+$ readelf -dW ./libsaludo.so
+$ readelf -rW ./saludo
+$ LD_LIBRARY_PATH=. ./saludo
+$ LD_DEBUG=libs,bindings LD_LIBRARY_PATH=. ./saludo 2>&1 | less
+\end{lstlisting}
+
+Prepará una segunda copia de \texttt{libsaludo.so} en un directorio diferente,
+con un mensaje distinguible, y compará:
+
+\begin{lstlisting}[language=bash]
+$ LD_LIBRARY_PATH=alternativa:. ./saludo
+$ LD_LIBRARY_PATH=.:alternativa ./saludo
+\end{lstlisting}
+
+Explicá qué biblioteca se elige en cada caso; usá \texttt{LD\_DEBUG} para
+justificar la búsqueda y \texttt{readelf -dW} y \texttt{readelf -rW} para
+relacionarla con \texttt{SONAME}, \texttt{NEEDED} y las reubicaciones. Compará
+el enlace perezoso con \texttt{LD\_BIND\_NOW=1} y describí cuándo se resuelve
+\texttt{saludar}. No copies direcciones.
+
+\newpage
+\section{Inspección de un plugin VST (4/10)}
+
+\begin{trackbox}{4/10}
+\textbf{Descripción:} inspeccionar un plugin VST (\emph{Virtual Studio
+Technology}) real como una biblioteca compartida, sin ejecutarlo.
+\end{trackbox}
+
+Elegí un plugin VST o VST3 para Linux de una fuente confiable. No hace falta
+instalar un DAW (\emph{Digital Audio Workstation}) ni producir audio. Si el
+plugin tiene formato \texttt{.vst3}, localizá dentro del paquete la biblioteca
+correspondiente a Linux; si es un archivo \texttt{.so}, usalo directamente.
+
+Inspeccioná la biblioteca con las herramientas del track anterior:
+
+\begin{enumerate}[leftmargin=*]
+  \item Usá \texttt{file} para identificar el formato y la arquitectura.
+  \item Usá \texttt{ldd} para listar sus dependencias y comprobar si falta
+  alguna.
+  \item Usá \texttt{readelf -hW} y \texttt{readelf -dW} para observar el tipo
+  de archivo, el intérprete y las bibliotecas requeridas.
+  \item Usá \texttt{nm -D --defined-only} para observar algunos símbolos
+  exportados.
+  \item Explicá qué tendría que hacer un programa anfitrión para usar esta
+  biblioteca y qué riesgo existe al cargar código de terceros.
+\end{enumerate}
+
+Registrá el nombre y la versión del plugin, la arquitectura, sus dependencias
+y tres observaciones de los comandos. No copies direcciones: relacioná los
+resultados con la carga de bibliotecas compartidas.
+
+\begin{bonusbox}
+Implementá un cargador de plugins usando \texttt{dlopen()}, \texttt{dlsym()}
+y \texttt{dlclose()}.
+
+Definí una interfaz binaria mínima (ABI, \emph{Application Binary Interface}),
+por ejemplo una función \texttt{int plugin\_run(const char *argumento)}. Creá
+dos plugins \texttt{.so} que implementen esa función y un programa
+\texttt{runner} que reciba por línea de comandos la ruta del plugin, lo cargue
+con \texttt{RTLD\_NOW | RTLD\_LOCAL}, busque el símbolo y lo ejecute.
+
+El programa debe informar errores de \texttt{dlopen()} y \texttt{dlsym()}
+mediante \texttt{dlerror()}, y cerrar la biblioteca con \texttt{dlclose()}.
+
+Compará este programa con otro enlazado directamente contra una biblioteca
+mediante \texttt{-l}. Usá \texttt{readelf -dW},
+\texttt{LD\_DEBUG=libs,bindings} y \texttt{/proc/<pid>/maps} para explicar:
+\begin{itemize}[leftmargin=*]
+  \item por qué el plugin cargado con \texttt{dlopen()} no aparece como
+  dependencia \texttt{NEEDED} inicial;
+  \item cuándo se resuelve el símbolo;
+  \item qué diferencia hay entre \texttt{RTLD\_LOCAL} y una biblioteca
+  enlazada normalmente;
+  \item qué puede fallar si el plugin no existe, no exporta el símbolo o usa
+  una interfaz incompatible;
+  \item qué riesgos tiene cargar bibliotecas proporcionadas por terceros.
+\end{itemize}
+\end{bonusbox}
+
+\newpage
+\section{Diagnóstico de errores de memoria (6/10)}
+
+\begin{trackbox}{6/10}
+\textbf{Descripción:} provocar errores controlados y comparar Valgrind,
+AddressSanitizer y un depurador.
+\end{trackbox}
+
+Usá este programa sólo en un entorno de prueba:
+
+\inputcode[language=C]{../examples/tp3-extra/errores.c}
+
+\begin{enumerate}[leftmargin=*]
+  \item Ejecutarlo sin herramientas y observar si el error es determinista.
+  \item Usar \texttt{valgrind --leak-check=full ./errores}.
+  \item Compilar con \texttt{-fsanitize=address -fno-omit-frame-pointer -g}
+  y repetir.
+  \item Ejecutarlo bajo \texttt{gdb}: detenerse en \texttt{main}, avanzar con
+  \texttt{next} y obtener un \texttt{backtrace} cuando aparezca el error.
+  \item Comparar pila, ubicación y momento en que cada herramienta detiene el
+  programa.
+  \item Observar las bibliotecas del runtime en
+  \texttt{/proc/<pid>/maps} mientras el programa está detenido.
+\end{enumerate}
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -g errores.c -o errores
+$ valgrind --leak-check=full ./errores
+$ gcc -Wall -Wextra -g -fsanitize=address \
+    -fno-omit-frame-pointer errores.c -o errores-asan
+$ ./errores-asan
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+$ gdb ./errores
+(gdb) break main
+(gdb) run
+(gdb) next
+(gdb) continue
+(gdb) backtrace
+\end{lstlisting}
+
+\begin{bonusbox}
+Construí una versión corregida con tres modos de error seleccionables
+(desborde, uso después de \texttt{free} y fuga) y un script que ejecute cada
+modo con Valgrind y AddressSanitizer. Compará los diagnósticos y explicá por
+qué un fallo de segmentación no necesariamente señala la línea donde terminó
+el proceso. Incluí capturas y dejá preparada una demostración.
+\end{bonusbox}
+
+\end{document}

@@ -1,0 +1,3 @@
+$ chmod u+x hello.py
+$ ls -l hello.py
+-rwxr--r-- {{\d+}} {{\S+}} {{\S+}} {{\d+}} {{.*}} hello.py

@@ -1,0 +1,4 @@
+{
+  "timeout": 5,
+  "exit_codes": [126, 0, 0]
+}

@@ -1,0 +1,5 @@
+$ ./hello.py
+{{(?:/bin/)?bash: (line [0-9]+: )?\./hello\.py: Permission denied}}
+$ chmod u+x hello.py
+$ ./hello.py
+hello, world

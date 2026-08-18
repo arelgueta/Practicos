@@ -1,11 +1,13 @@
 TEXLIVE_IMAGE ?= ghcr.io/xu-cheng/texlive-alpine:latest
 TYPST_IMAGE ?= ghcr.io/typst/typst:latest
+TEST_IMAGE ?= os-practicos-tests
+UBUNTU_IMAGE ?= ubuntu:latest
 FONTS_DIR ?= fonts
-TEX_FILES ?= TP1/Practico1.tex TP1/Practico1-extra.tex TP2/Practico2.tex TP2/Practico2-extra.tex
-TYPST_FILES ?= TP1-typst/Practico1t.typ TP1-typst/Practico1t-extra.typ TP2-typst/Practico2t.typ TP2-typst/Practico2t-extra.typ
-WATCH_DIRS := $(sort $(dir $(TEX_FILES) $(TYPST_FILES) TP1/Captura\ desde\ 2026-08-03\ 19-11-55.png) $(FONTS_DIR)/)
+TEX_FILES ?= TP1/Practico1.tex TP1/Practico1-extra.tex TP2/Practico2.tex TP2/Practico2-extra.tex TP3/Practico3.tex TP3/Practico3-extra.tex
+TYPST_FILES ?= TP1-typst/Practico1t.typ TP1-typst/Practico1t-extra.typ TP2-typst/Practico2t.typ TP2-typst/Practico2t-extra.typ TP3-typst/Practico3t.typ TP3-typst/Practico3t-extra.typ
+WATCH_DIRS := $(sort $(dir $(TEX_FILES) $(TYPST_FILES) TP1/Captura\ desde\ 2026-08-03\ 19-11-55.png) $(FONTS_DIR)/ examples/)
 
-.PHONY: all pdf typst clean watch
+.PHONY: all pdf typst test test-latest clean watch
 
 all: pdf typst
 
@@ -38,6 +40,17 @@ typst:
 			compile --root /work --font-path "/work/$(FONTS_DIR)" \
 				"$$file" "$${file%.typ}.pdf"; \
 	done
+
+test:
+	docker build --pull \
+		--build-arg UBUNTU_IMAGE="$(UBUNTU_IMAGE)" \
+		-f tests/Dockerfile \
+		-t "$(TEST_IMAGE)" \
+		.
+	docker run --rm --network=none "$(TEST_IMAGE)"
+
+test-latest:
+	$(MAKE) test UBUNTU_IMAGE=ubuntu:latest
 
 clean:
 	@set -eu; \

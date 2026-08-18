@@ -1,0 +1,435 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{etoolbox}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{infobox}{
+  colback=blue!6!white, colframe=blue!45!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=INFO, fonttitle=\bfseries, coltitle=blue!45!black,
+  colbacktitle=blue!6!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{notebox}{
+  colback=black!5!white, colframe=black!25!white,
+  arc=2mm, boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  boxsep=1pt, breakable
+}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5},
+  rulecolor=\color{black!25},
+  frame=single,
+  framerule=0.5pt,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!70!black},
+  columns=fullflexible
+}
+\lstset{style=codestyle}
+\BeforeBeginEnvironment{lstlisting}{%
+  \par\addvspace{0.2\baselineskip}\noindent
+  \begin{minipage}{\linewidth}}
+\AfterEndEnvironment{lstlisting}{%
+  \end{minipage}\par\addvspace{0.2\baselineskip}}
+\newcommand{\inputcode}[2][]{%
+  \par\addvspace{0.2\baselineskip}\noindent
+  \begin{minipage}{\linewidth}
+    \lstinputlisting[#1]{#2}
+  \end{minipage}\par\addvspace{0.2\baselineskip}}
+\setlist{nosep}
+
+\title{Trabajo Práctico 3 -- Memoria}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+Este TP sigue el paso de un programa desde el código fuente hasta un proceso
+en ejecución. Primero construirás \texttt{hello.c} para observar compilación,
+enlace y formatos de archivo. Luego crearás \texttt{memoria.c} para relacionar
+sus símbolos, secciones y segmentos con las regiones que el núcleo (kernel)
+carga en memoria.
+
+\section{ELF y el proceso de enlace}
+
+ELF (\emph{Executable and Linkable Format}) organiza código, datos, símbolos,
+reubicaciones y bibliotecas para que el enlazador y el núcleo puedan usar un
+objeto. Para ubicar los tres tipos principales en la ruta del programa,
+sigamos el caso de \texttt{hello.c}:
+
+\begin{enumerate}
+  \item \textbf{Archivo reubicable (\emph{relocatable file})}. Contiene código
+  y datos todavía enlazables con otros objetos. Es la salida de compilar con
+  \texttt{gcc -c hello.c}; en Linux suele tener extensión \texttt{.o} (y
+  \texttt{.ko} en un módulo del núcleo), y todavía no está listo para iniciar.
+  \item \textbf{Archivo ejecutable (\emph{executable file})}. Es el resultado
+  usual de enlazar objetos y bibliotecas; queda listo para iniciar. Un script
+  de shell no es un ELF: quien se ejecuta es su intérprete. En Linux suele no
+  llevar extensión, como el ejecutable \texttt{hello}.
+  \item \textbf{Objeto compartido (\emph{shared object})}. Es una biblioteca
+  que puede enlazarse o cargarse junto con un programa; en Linux suele tener
+  extensión \texttt{.so}. No es un paso obligatorio después del ejecutable,
+  sino una rama paralela que puede participar en el enlace o en la carga.
+\end{enumerate}
+
+El recorrido principal de este práctico es
+\texttt{hello.c} $\longrightarrow$ \texttt{hello.o} $\longrightarrow$
+\texttt{hello} $\longrightarrow$ proceso.
+
+Creá \texttt{hello.c} con este contenido:
+
+\inputcode[language=C]{../examples/tp3/hello.c}
+
+\begin{lstlisting}[language=bash]
+$ gcc -c hello.c -o hello.o
+$ gcc hello.c -o hello
+$ file hello hello.o
+hello: ELF 64-bit LSB pie executable, x86-64, dynamically linked, ...
+hello.o: ELF 64-bit LSB relocatable, x86-64, ...
+\end{lstlisting}
+
+\subsection{Del código fuente al ejecutable}
+
+Al compilar, el comando \texttt{gcc} coordina internamente cuatro etapas: el
+preprocesador (\emph{preprocessor}) expande \texttt{\#include}, macros y
+condicionales; el compilador (\emph{compiler}) traduce el código a ensamblador;
+el ensamblador (\emph{assembler}) produce un archivo objeto \texttt{.o}; y el
+enlazador (\emph{linker}) combina objetos y bibliotecas para formar el
+ejecutable. Una invocación normal ejecuta todas las etapas y entrega el
+ejecutable; las opciones siguientes permiten detenerse y conservar resultados
+intermedios. Así, \texttt{gcc} coordina el recorrido completo: no hay que
+invocar manualmente cada herramienta para compilar un programa habitual:
+
+\begin{lstlisting}[language=bash]
+$ gcc -E hello.c -o hello.i
+$ gcc -S hello.c -o hello.s
+$ gcc -c hello.c -o hello.o
+$ gcc hello.o -o hello
+\end{lstlisting}
+
+Las extensiones \texttt{.i}, \texttt{.s} y \texttt{.o} identifican,
+respectivamente, resultados preprocesados, ensamblador y archivos objeto.
+El último comando vuelve a enlazar el objeto y produce el ejecutable.
+
+Una biblioteca estática contiene objetos que se copian al ejecutable; una
+compartida queda como dependencia y sus símbolos se resuelven al cargar.
+Para comparar ambas variantes usaremos una biblioteca mínima: \texttt{saludo.c}
+define la función \texttt{saludar()} y \texttt{main.c} la invoca.
+
+\inputcode[language=C]{../examples/tp3/shared/saludo.c}
+\inputcode[language=C]{../examples/tp3/shared/main.c}
+
+Primero compilá los dos archivos fuente como objetos. Este paso es común a las
+dos variantes:
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -c saludo.c -o saludo.o
+$ gcc -Wall -Wextra -c main.c -o main.o
+\end{lstlisting}
+
+\textbf{Enlace estático.} Un archivo \texttt{.a} es normalmente una biblioteca
+estática (un archivo \emph{archive}) que agrupa objetos. El prefijo \texttt{lib} y
+el sufijo \texttt{.a} permiten que \texttt{-lsaludo} encuentre
+\texttt{libsaludo.a}; \texttt{-L.} agrega el directorio actual a la
+búsqueda. Creá la biblioteca y enlazala con el programa:
+
+\begin{lstlisting}[language=bash]
+$ ar rcs libsaludo.a saludo.o
+$ gcc main.o -L. -lsaludo -o saludo-estatico
+$ file libsaludo.a saludo-estatico
+\end{lstlisting}
+
+\Needspace{12\baselineskip}
+\textbf{Enlace dinámico.} Creá un objeto compartido (\texttt{.so}) y
+enlazalo dejando la biblioteca como dependencia del ejecutable:
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -fPIC -shared saludo.c -o libsaludo.so
+$ gcc -Wall -Wextra main.c -L. -lsaludo -Wl,-rpath,'$ORIGIN' -o saludo-compartido
+$ file libsaludo.so saludo-compartido
+$ ldd saludo-compartido
+$ readelf -d saludo-compartido
+\end{lstlisting}
+
+\begin{notebox}
+En la variante estática, la implementación de \texttt{saludar} queda dentro
+del ejecutable y no hace falta conservar \texttt{libsaludo.a} para
+ejecutarlo. En la variante compartida, el ejecutable conserva una
+dependencia de \texttt{libsaludo.so}; por eso \texttt{ldd} y
+\texttt{readelf -d} permiten verla. Si cambia una biblioteca estática hay
+que volver a enlazar; una biblioteca compartida puede reemplazarse sin
+recompilar el programa, siempre que se conserve una interfaz compatible.
+\end{notebox}
+
+\begin{extrabox}
+Compará las variantes con \texttt{file}, \texttt{ldd} y \texttt{readelf -d}:
+registrá tamaño, dependencias e intérprete. Estos resultados pueden cambiar
+entre arquitecturas y distribuciones.
+\end{extrabox}
+
+\subsection{El programa que vamos a observar: \texttt{memoria.c}}
+
+Creá \texttt{memoria.c}. Este único programa contiene los objetos que vamos a
+seguir: datos inicializados y no inicializados, una cadena de sólo lectura,
+una función, una variable local y una reserva en el heap. También imprime sus
+direcciones y su identificador de proceso (PID, \emph{Process ID}), y permanece
+vivo para poder observar su mapa.
+
+\inputcode[language=C,basicstyle=\ttfamily\footnotesize]{../examples/tp3/memoria.c}
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -O0 -g -o memoria memoria.c
+$ ./memoria
+\end{lstlisting}
+
+No copies las direcciones de una ejecución: cambian con ASLR (Address Space
+Layout Randomization). En las próximas secciones vamos a comprobar, usando
+las herramientas del sistema, qué parte del archivo y qué región del proceso
+corresponde a cada objeto.
+
+\section{ELF: cabecera, secciones y símbolos}
+
+El comando \texttt{file} ofrece una clasificación rápida. Para inspeccionar
+los campos con más detalle usaremos \texttt{readelf}, una herramienta de
+\texttt{binutils} que interpreta las estructuras ELF. Ahora inspeccionamos
+el archivo que acabamos de construir, sin cambiar todavía al proceso en
+ejecución:
+
+\begin{lstlisting}[language=bash]
+$ file memoria
+$ readelf -h memoria
+$ readelf -h memoria | grep -E 'Class|Data|Type|Machine|Entry'
+\end{lstlisting}
+
+La cabecera informa el número mágico (\texttt{7f 45 4c 46}) y la clase del
+objeto (\texttt{ELF32} o \texttt{ELF64}). También indica el orden de bytes, la
+arquitectura, el tipo, el punto de entrada y la ubicación de las tablas. Con un
+ejecutable independiente de posición (PIE, \emph{Position-Independent
+Executable}), \texttt{Type} suele ser \texttt{DYN}. Sin PIE puede ser
+\texttt{EXEC}; ambos siguen siendo ejecutables. La salida exacta depende de
+la arquitectura y de las opciones de compilación.
+
+Usá la salida de tu propio \texttt{memoria}: no copies direcciones de una
+salida de referencia. Explicá qué informa cada campo y registrá sus valores.
+
+\subsection{De los objetos fuente a las secciones}
+
+Las secciones son la vista del compilador y del enlazador. Listalas y buscá
+los objetos del programa:
+
+\begin{lstlisting}[language=bash]
+$ readelf -SW memoria
+$ readelf -sW memoria | grep -E 'main|marker|message|global_data|printf'
+$ nm -C memoria | grep -E 'main|marker|message|global_data'
+$ objdump -d -j .text memoria
+$ objdump -s -j .data memoria
+$ objdump -s -j .rodata memoria
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{.text} contiene \texttt{main} y \texttt{marker}; \texttt{.rodata}
+  contiene \texttt{message} y otras cadenas.
+  \item \texttt{.data} contiene \texttt{global\_data}; \texttt{.bss} (BSS,
+  \emph{Block Started by Symbol}) contiene \texttt{global\_data\_2}. El
+  archivo guarda el tamaño de \texttt{.bss}, no todos sus ceros.
+  \item \texttt{.symtab} contiene símbolos de enlace y depuración, y
+  \texttt{.dynsym}, símbolos del enlace dinámico. Un ejecutable \emph{stripped}
+  puede perder la primera.
+  \item \texttt{local\_data} y \texttt{heap\_data} no son secciones ELF:
+  aparecen en la pila y el heap del proceso cuando el programa se ejecuta.
+\end{itemize}
+
+En \texttt{readelf -sW}, \texttt{Value} es una dirección o valor relativo y
+\texttt{Ndx} identifica la sección. \texttt{printf} suele figurar como
+\texttt{UND}, porque su implementación vive en una biblioteca compartida. La
+relación entre ese símbolo externo, \texttt{.plt} y \texttt{.got.plt} se
+retomará más adelante.
+
+\begin{extrabox}
+Copiá \texttt{memoria} como \texttt{memoria-stripped}, ejecutá \texttt{strip}
+y repetí \texttt{nm -C} y \texttt{readelf -sW}. Explicá qué información se
+pierde y por qué el programa todavía puede ejecutarse.
+\end{extrabox}
+
+\section{Segmentos y carga en memoria}
+
+Las secciones organizan el archivo para el compilador y el enlazador; los
+segmentos describen lo que el cargador proyecta en memoria. Inspeccioná ambos
+vínculos:
+
+\begin{lstlisting}[language=bash]
+$ readelf -lW memoria
+$ readelf -SW memoria
+\end{lstlisting}
+
+La tabla de cabecera de programa (PHT, \emph{Program Header Table}) relaciona
+las secciones con los segmentos que el cargador puede proyectar. Cada
+segmento \texttt{LOAD} describe una región y sus banderas principales son
+\texttt{R} (lectura), \texttt{W} (escritura) y \texttt{E} (ejecución).
+Normalmente \texttt{.text} y \texttt{.rodata} van en un segmento \texttt{R E};
+\texttt{.data} y \texttt{.bss}, en uno \texttt{R W}.
+
+\texttt{FileSiz} indica cuántos bytes del segmento ocupan espacio en el
+archivo; \texttt{MemSiz} indica cuántos bytes necesita en memoria. Para
+\texttt{.bss}, el cargador completa con ceros la diferencia entre ambos, por
+eso el segmento de datos puede tener \texttt{MemSiz} mayor que
+\texttt{FileSiz}. Un segmento puede contener varias secciones. El núcleo
+redondea sus límites a páginas, habitualmente de 4 KiB, y conserva sus
+protecciones.
+
+\subsection{Seguir un símbolo externo}
+
+Una llamada a \texttt{printf} suele pasar por la PLT (\emph{Procedure Linkage
+Table}) y la GOT (\emph{Global Offset Table}): el código salta a la PLT,
+ésta usa una entrada de la GOT, el enlazador dinámico resuelve el símbolo y
+guarda la dirección para las llamadas siguientes. En la primera llamada, la
+entrada de la GOT puede apuntar nuevamente a la PLT; el enlazador dinámico
+resuelve la dirección y actualiza esa entrada. En las siguientes llamadas se
+usa la dirección ya resuelta.
+
+\begin{lstlisting}[language=bash]
+$ objdump -d -j .plt memoria
+$ readelf -rW memoria
+$ readelf -x .got.plt memoria
+$ LD_BIND_NOW=1 ./memoria
+$ LD_DEBUG=bindings ./memoria 2>&1 | less
+\end{lstlisting}
+
+Las instrucciones concretas dependen de la arquitectura. El enlace perezoso
+es una estrategia, no una garantía idéntica entre versiones de PIE y binutils.
+Esta vista queda como orientación; el camino principal continúa con la carga
+del mismo archivo.
+
+\subsection{Páginas, memoria virtual e intercambio}
+
+La memoria virtual da a cada proceso un espacio propio. El núcleo traduce
+direcciones a páginas físicas y las carga bajo demanda: \emph{page-in} trae
+una página desde un archivo o intercambio (\emph{swap}); \emph{page-out} la
+escribe para liberar memoria. \texttt{vmstat} resume memoria, intercambio,
+E/S, sistema y CPU:
+
+\begin{lstlisting}[language=bash]
+$ vmstat 1 5
+$ free -h
+$ cat /proc/meminfo
+$ cat /proc/swaps
+\end{lstlisting}
+
+\texttt{free} muestra memoria libre; \texttt{si}, páginas llevadas a RAM; y
+\texttt{so}, páginas enviadas a swap por segundo. Un \texttt{so} aislado no
+diagnostica un problema: correlacioná con \texttt{free}, \texttt{top} y
+\texttt{/proc/meminfo}.
+
+\begin{extrabox}
+Investigá memoria anónima, páginas respaldadas por archivos y swap en
+\texttt{man 5 proc}, especialmente \texttt{meminfo}, \texttt{status} y
+\texttt{smaps}. No uses \texttt{swapoff} en una máquina compartida.
+\end{extrabox}
+
+\section{\texttt{/proc/<pid>/maps}: del segmento a la región}
+
+El sistema de archivos virtual procfs (\emph{proc filesystem}) expone el
+estado del sistema y de los procesos. La información de un proceso con PID
+\texttt{1234} está en \texttt{/proc/1234/}; \texttt{/proc/self/} refiere al
+proceso que consulta ese archivo.
+
+Ahora ejecutá el mismo \texttt{memoria} y compará sus regiones con los
+segmentos de \texttt{readelf -lW}:
+
+\begin{lstlisting}[language=bash]
+$ ./memoria &
+$ pid=$!
+$ cat /proc/$pid/maps
+$ cat /proc/$pid/status | grep -E 'Vm|Threads'
+$ wait $pid
+\end{lstlisting}
+
+Una línea de \texttt{maps} tiene esta forma:
+
+\begin{lstlisting}[language=bash]
+55a1...-55a2... r-xp 00002000 08:01 12345 /home/usuario/memoria
+7f10...-7f12... r-xp 00000000 08:01 67890 /usr/lib/libc.so.6
+7ffd...-7fff... rw-p 00000000 00:00 0      [stack]
+\end{lstlisting}
+
+Los campos son: rango virtual (inicio inclusivo, fin exclusivo), permisos
+\texttt{rwx}, tipo de compartimiento \texttt{p}/\texttt{s}, desplazamiento
+dentro del archivo respaldante, dispositivo, i-nodo y ruta. Los ceros y los
+nombres como \texttt{[heap]} o \texttt{[stack]} indican regiones anónimas.
+El ejecutable puede aparecer en varias líneas porque sus segmentos tienen
+protecciones distintas; también aparecen el enlazador dinámico,
+\texttt{libc}, el heap y la pila.
+
+
+\Needspace{18\baselineskip}
+\subsection{Observar el cargador con \texttt{gdb}}
+
+\texttt{gdb} (\emph{GNU Debugger}) es un depurador interactivo: permite
+iniciar un programa, detenerlo en un punto elegido e inspeccionar su estado.
+Al detenernos en \texttt{main}, el cargador ya preparó el ejecutable y sus
+bibliotecas; por eso podemos observar el proceso mientras está detenido.
+\texttt{break main} fija el punto de detención, \texttt{run} inicia el
+programa, \texttt{backtrace} muestra la pila de llamadas,
+\texttt{info proc mappings} muestra sus regiones de memoria,
+\texttt{next} avanza una línea y \texttt{continue} reanuda la ejecución.
+
+\begin{lstlisting}[language=bash]
+$ gdb ./memoria
+(gdb) break main
+(gdb) run
+(gdb) backtrace
+(gdb) print &global_data
+(gdb) info proc mappings
+(gdb) next
+(gdb) continue
+(gdb) quit
+\end{lstlisting}
+
+También podés usar \texttt{pmap -x <pid>} como vista alternativa. Para
+inspeccionar un ELF, \texttt{readelf}, \texttt{objdump} y \texttt{nm}
+ofrecen vistas complementarias de sus cabeceras, secciones y símbolos.
+
+\end{document}

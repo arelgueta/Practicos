@@ -13,6 +13,7 @@ on:
       - '**/*.png'
       - '**/*.jpg'
       - '**/*.jpeg'
+      - 'examples/**'
       - 'fonts/**'
       - '.github/workflows/build-pdfs.yml'
   workflow_dispatch:
@@ -28,10 +29,14 @@ jobs:
       tex_extra: ${{ steps.filter.outputs.tex_extra }}
       tex_tp2: ${{ steps.filter.outputs.tex_tp2 }}
       tex_tp2_extra: ${{ steps.filter.outputs.tex_tp2_extra }}
+      tex_tp3: ${{ steps.filter.outputs.tex_tp3 }}
+      tex_tp3_extra: ${{ steps.filter.outputs.tex_tp3_extra }}
       typst_main: ${{ steps.filter.outputs.typst_main }}
       typst_extra: ${{ steps.filter.outputs.typst_extra }}
       typst_tp2: ${{ steps.filter.outputs.typst_tp2 }}
       typst_tp2_extra: ${{ steps.filter.outputs.typst_tp2_extra }}
+      typst_tp3: ${{ steps.filter.outputs.typst_tp3 }}
+      typst_tp3_extra: ${{ steps.filter.outputs.typst_tp3_extra }}
       manual: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
@@ -49,26 +54,44 @@ jobs:
               - 'TP1/*.png'
               - 'TP1/*.jpg'
               - 'TP1/*.jpeg'
+              - 'examples/tp1/**'
             tex_extra:
               - 'TP1/Practico1-extra.tex'
             tex_tp2:
               - 'TP2/Practico2.tex'
+              - 'examples/tp2/**'
             tex_tp2_extra:
               - 'TP2/Practico2-extra.tex'
+            tex_tp3:
+              - 'TP3/Practico3.tex'
+              - 'examples/tp3/**'
+            tex_tp3_extra:
+              - 'TP3/Practico3-extra.tex'
+              - 'examples/tp3-extra/**'
             typst_main:
               - 'TP1-typst/Practico1t.typ'
               - 'TP1/*.png'
               - 'TP1/*.jpg'
               - 'TP1/*.jpeg'
+              - 'examples/tp1/**'
               - 'fonts/**'
             typst_extra:
               - 'TP1-typst/Practico1t-extra.typ'
               - 'fonts/**'
             typst_tp2:
               - 'TP2-typst/Practico2t.typ'
+              - 'examples/tp2/**'
               - 'fonts/**'
             typst_tp2_extra:
               - 'TP2-typst/Practico2t-extra.typ'
+              - 'fonts/**'
+            typst_tp3:
+              - 'TP3-typst/Practico3t.typ'
+              - 'examples/tp3/**'
+              - 'fonts/**'
+            typst_tp3_extra:
+              - 'TP3-typst/Practico3t-extra.typ'
+              - 'examples/tp3-extra/**'
               - 'fonts/**'
 
   build:
@@ -104,6 +127,18 @@ jobs:
             tp: 2
             variant: ' extra'
             filter: tex_tp2_extra
+          - tex_file: TP3/Practico3.tex
+            pdf_file: TP3/Practico3.pdf
+            artifact_name: tp3-latex
+            tp: 3
+            variant: ''
+            filter: tex_tp3
+          - tex_file: TP3/Practico3-extra.tex
+            pdf_file: TP3/Practico3-extra.pdf
+            artifact_name: tp3-latex-extra
+            tp: 3
+            variant: ' extra'
+            filter: tex_tp3_extra
 
     steps:
       - name: Check out repository
@@ -157,6 +192,18 @@ jobs:
             tp: 2
             variant: ' extra'
             filter: typst_tp2_extra
+          - typ_file: TP3-typst/Practico3t.typ
+            pdf_file: TP3-typst/Practico3t.pdf
+            artifact_name: tp3-typst
+            tp: 3
+            variant: ''
+            filter: typst_tp3
+          - typ_file: TP3-typst/Practico3t-extra.typ
+            pdf_file: TP3-typst/Practico3t-extra.pdf
+            artifact_name: tp3-typst-extra
+            tp: 3
+            variant: ' extra'
+            filter: typst_tp3_extra
 
     steps:
       - name: Check out repository
@@ -195,10 +242,14 @@ jobs:
        needs.changes.outputs.tex_extra == 'true' ||
        needs.changes.outputs.tex_tp2 == 'true' ||
        needs.changes.outputs.tex_tp2_extra == 'true' ||
+       needs.changes.outputs.tex_tp3 == 'true' ||
+       needs.changes.outputs.tex_tp3_extra == 'true' ||
        needs.changes.outputs.typst_main == 'true' ||
        needs.changes.outputs.typst_extra == 'true' ||
        needs.changes.outputs.typst_tp2 == 'true' ||
-       needs.changes.outputs.typst_tp2_extra == 'true')
+       needs.changes.outputs.typst_tp2_extra == 'true' ||
+       needs.changes.outputs.typst_tp3 == 'true' ||
+       needs.changes.outputs.typst_tp3_extra == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write

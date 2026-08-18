@@ -1,0 +1,31 @@
+name: Test exercises
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'examples/**'
+      - 'tests/**'
+      - 'Makefile'
+      - '.github/workflows/test-exercises.yml'
+  pull_request:
+    paths:
+      - 'examples/**'
+      - 'tests/**'
+      - 'Makefile'
+      - '.github/workflows/test-exercises.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run TP1 transcript tests
+        run: make test

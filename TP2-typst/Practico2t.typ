@@ -100,17 +100,7 @@ pid_t getppid(void);
 
 Creá archivo `obtenerpid.c` con este contenido:
 
-```c
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-int main(void) {
-    printf("PID: %d\n", getpid());
-    printf("PPID: %d\n", getppid());
-    return 0;
-}
-```
+#raw(read("../examples/tp2/processes/obtenerpid.c"), lang: "c", block: true)
 
 Compilalo y ejecutalo:
 
@@ -132,25 +122,7 @@ El PPID normalmente corresponde al shell que lanzó programa. Con `strace` podé
 
 `fork()` crea proceso hijo como copia del proceso que lo invoca. Su retorno te permite distinguir caminos: `-1` indica error, `0` identifica hijo y valor positivo identifica padre.
 
-```c
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-int main(void) {
-    pid_t pid = fork();
-
-    if (pid == -1) {
-        perror("fork");
-        return 1;
-    }
-    if (pid == 0)
-        printf("Hijo: PID=%d PPID=%d\n", getpid(), getppid());
-    else
-        printf("Padre: PID=%d PPID=%d\n", getpid(), getppid());
-    return 0;
-}
-```
+#raw(read("../examples/tp2/processes/creaproceso.c"), lang: "c", block: true)
 
 ```sh
 $ gcc -Wall -Wextra -o creaproceso creaproceso.c
@@ -166,25 +138,7 @@ La llamada `exec()` reemplaza programa que está corriendo por otro. Shell suele
 
 Los hilos te permiten ejecutar varias secuencias dentro del mismo proceso. Comparten memoria, pero cada uno tiene estado de ejecución propio.
 
-```c
-#include <pthread.h>
-#include <stdio.h>
-
-void *saludar(void *arg) {
-    const char *texto = arg;
-    while (1) printf("%s\n", texto);
-    return NULL;
-}
-
-int main(void) {
-    pthread_t uno, dos;
-    pthread_create(&uno, NULL, saludar, "Hola");
-    pthread_create(&dos, NULL, saludar, "mundo");
-    pthread_join(uno, NULL);
-    pthread_join(dos, NULL);
-    return 0;
-}
-```
+#raw(read("../examples/tp2/processes/holahilo.c"), lang: "c", block: true)
 
 Compilalo enlazando biblioteca POSIX de hilos. Para detenerlo, apretá `Ctrl-C`:
 

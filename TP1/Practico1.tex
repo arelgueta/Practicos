@@ -87,6 +87,10 @@
   columns=fullflexible,
 }
 \lstset{style=codestyle}
+\newcommand{\inputcode}[2][]{%
+  \par\noindent\begin{minipage}{\linewidth}
+    \lstinputlisting[#1]{#2}
+  \end{minipage}\par}
 
 % ---------- Título ----------
 \title{Trabajo Práctico 1}
@@ -450,15 +454,9 @@ Para mas informacion es posible correr el comando \lstinline!vimtutor!.
 
 \section{C: hello, world}
 
-Un programa muy simple en C (Crear un archivo \lstinline!hello.c! y escribir este contenido):
+Un programa muy simple en C (creá el archivo \lstinline!hello.c! con este contenido):
 
-\begin{lstlisting}[language=C]
-#include <stdio.h>
-int main() {
-   printf("hello, world\n");
-   return 0;
-}
-\end{lstlisting}
+\inputcode[language=C]{../examples/tp1/hello/hello.c}
 
 La línea \lstinline!#include <stdio.h>! es una directiva para el preprocesador del compilador.
 
@@ -480,11 +478,7 @@ La colección de compiladores GNU es un conjunto de compiladores creados por el 
 
 Utilizaremos este comando para compilar el archivo fuente \lstinline!hello.c! recientemente creado con el editor de nuestra preferencia. Simplemente, mediante el comando:
 
-\begin{lstlisting}[language=bash]
-ubuntu@ubuntu:~$ gcc hello.c -o hello
-ubuntu@ubuntu:~$ ./hello
-hello, world
-\end{lstlisting}
+\inputcode[language=bash]{../examples/tp1/hello/hello.session}
 
 Se lo compila; la opción \lstinline!-o! se utiliza para indicar que el archivo de salida (output) a generar debe llamarse como se le indica a continuación, caso contrario, el archivo de salida siempre se llamará \lstinline!a.out!, y se lo ejecuta colocando por delante \lstinline!./!.
 
@@ -543,20 +537,9 @@ Este comando invoca al preprocesador (cpp) sobre el archivo \lstinline!hello.c!,
 
 El programa equivalente escrito en lenguaje Python sería simplemente:
 
-\begin{lstlisting}[language=Python]
-#!/usr/bin/env python3
-print("hello, world")
-\end{lstlisting}
+\inputcode[language=Python]{../examples/tp1/hello/hello.py}
 
-\begin{lstlisting}[language=bash]
-ubuntu@ubuntu:~$ vim hello.py
-ubuntu@ubuntu:~$ ./hello.py
-bash: ./hello.py: Permission denied
-ubuntu@ubuntu:~$ chmod u+x hello.py
-ubuntu@ubuntu:~$ ./hello.py
-hello, world
-ubuntu@ubuntu:~$
-\end{lstlisting}
+\inputcode[language=bash]{../examples/tp1/hello/python.session}
 
 Notar que es necesario otorgarle permisos de ejecucion al archivo utilizando \lstinline!chmod!.
 
@@ -580,10 +563,7 @@ Cada grupo puede tener permisos de lectura, escritura y ejecución:
 
 Podemos observarlos usando:
 
-\begin{lstlisting}[language=bash]
-ubuntu@ubuntu:~$ ls -l hello.py
--rwxr--r-- 1 ubuntu ubuntu 48 Aug  3 20:00 hello.py
-\end{lstlisting}
+\inputcode[language=bash]{../examples/tp1/hello/permissions-symbolic.session}
 
 Los primeros diez caracteres representan el tipo de archivo y sus permisos. El primer carácter indica el tipo; por ejemplo, \texttt{-} representa un archivo regular. Los siguientes nueve caracteres se agrupan en propietario, grupo y otros:
 
@@ -602,11 +582,7 @@ También es posible expresar permisos usando números. Los valores son:
 
 Por ejemplo, \texttt{chmod 755 hello.py} asigna permisos de lectura, escritura y ejecución al propietario, y permisos de lectura y ejecución al grupo y al resto:
 
-\begin{lstlisting}[language=bash]
-ubuntu@ubuntu:~$ chmod 755 hello.py
-ubuntu@ubuntu:~$ ls -l hello.py
--rwxr-xr-x 1 ubuntu ubuntu 48 Aug  3 20:00 hello.py
-\end{lstlisting}
+\inputcode[language=bash]{../examples/tp1/hello/permissions-numeric.session}
 
 Alternativamente es posible ejecutarlo directamente usando python: \lstinline!python3 hello.py!
 

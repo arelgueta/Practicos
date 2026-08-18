@@ -1,0 +1,41 @@
+Cuestionario conceptual externo — TP3
+
+Respondé una opción en cada caso después de realizar los experimentos del
+práctico. No hace falta entregar un informe escrito.
+
+1. ¿Dónde existe `local_data` cuando `memoria` está ejecutándose?
+   a) En una sección `.bss` del archivo
+   b) En la pila del proceso
+   c) En la biblioteca `libc`
+   d) En la tabla `.dynsym`
+
+2. ¿Por qué `MemSiz` puede ser mayor que `FileSiz` en un segmento?
+   a) Porque el cargador completa con ceros la memoria de `.bss`
+   b) Porque ASLR duplica el archivo
+   c) Porque `.text` se copia en la pila
+   d) Porque `strip` agrega símbolos
+
+3. ¿Qué describe una región `r-xp` de `maps`?
+   a) Memoria privada, legible y ejecutable
+   b) Memoria compartida, escribible y no ejecutable
+   c) Memoria anónima sólo de lectura
+   d) Espacio de intercambio
+
+4. ¿Por qué el archivo `memoria` puede aparecer en varias líneas de `maps`?
+   a) Cada proceso tiene una copia completa independiente
+   b) Sus segmentos se mapean con permisos diferentes
+   c) `maps` mezcla procesos del mismo usuario
+   d) El archivo contiene varias funciones `main`
+
+5. ¿Qué cambia normalmente entre dos ejecuciones con ASLR?
+   a) La relación entre variables y regiones
+   b) Las protecciones de todos los segmentos
+   c) Las direcciones concretas de las regiones
+   d) El número mágico ELF
+
+6. En el enlace perezoso, ¿qué ocurre normalmente en la primera llamada a una
+   función externa?
+   a) Se elimina la entrada de `GOT`
+   b) Se resuelve el símbolo y se guarda su dirección
+   c) Se copia toda la biblioteca dentro de `.text`
+   d) Se desactiva ASLR

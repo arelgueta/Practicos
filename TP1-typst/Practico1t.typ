@@ -408,14 +408,8 @@ VIM tambien posee modo busqueda con `/`.
 
 = C: hello, world
 
-Un programa muy simple en C (Crear un archivo `hello.c` y escribir este contenido):
-```c
-#include <stdio.h>
-int main() {
-   printf("hello, world\n");
-   return 0;
-}
-```
+Un programa muy simple en C (creá el archivo `hello.c` con este contenido):
+#raw(read("../examples/tp1/hello/hello.c"), lang: "c", block: true)
 
 La línea `#include <stdio.h>` es una directiva para el preprocesador del compilador.
 
@@ -436,11 +430,7 @@ Y la instrucción `return 0` devuelve un cero -que, por convención, indica que 
 La colección de compiladores GNU es un conjunto de compiladores creados por el proyecto GNU. Originalmente GCC (y el comando `gcc`) signiﬁcaba GNU C Compiler (compilador GNU de C), porque sólo compilaba el lenguaje C, pero posteriormente se extendió para compilar C++, Fortran, Ada y otros.
 
 Utilizaremos este comando para compilar el archivo fuente `hello.c` recientemente creado con el editor de nuestra preferencia. Simplemente, mediante el comando:
-```sh
-ubuntu@ubuntu:~$ gcc hello.c -o hello
-ubuntu@ubuntu:~$ ./hello
-hello, world
-```
+#raw(read("../examples/tp1/hello/hello.session"), lang: "bash", block: true)
 
 Se lo compila; la opción `-o` se utiliza para indicar que el archivo de salida (output) a generar debe llamarse como se le indica a continuación, caso contrario, el archivo de salida siempre se llamará `a.out`, y se lo ejecuta colocando por delante `./`.
 
@@ -500,20 +490,9 @@ Este comando invoca al preprocesador (cpp) sobre el archivo `hello.c`, realiza u
 
 El programa equivalente escrito en lenguaje Python sería simplemente:
 
-```py
-#!/usr/bin/env python3
-print("hello, world")
-```
+#raw(read("../examples/tp1/hello/hello.py"), lang: "python", block: true)
 
-```sh
-ubuntu@ubuntu:~$ vim hello.py
-ubuntu@ubuntu:~$ ./hello.py
-bash: ./hello.py: Permission denied
-ubuntu@ubuntu:~$ chmod u+x hello.py 
-ubuntu@ubuntu:~$ ./hello.py
-hello, world
-ubuntu@ubuntu:~$ 
-```
+#raw(read("../examples/tp1/hello/python.session"), lang: "bash", block: true)
 
 Notar que es necesario otorgarle permisos de ejecucion al archivo utilizando `chmod`.
 
@@ -531,10 +510,7 @@ Cada grupo puede tener permisos de lectura, escritura y ejecución:
 
 Podemos observarlos usando:
 
-```sh
-ubuntu@ubuntu:~$ ls -l hello.py
--rwxr--r-- 1 ubuntu ubuntu 48 Aug  3 20:00 hello.py
-```
+#raw(read("../examples/tp1/hello/permissions-symbolic.session"), lang: "bash", block: true)
 
 Los primeros diez caracteres representan el tipo de archivo y sus permisos. El primer carácter indica el tipo; por ejemplo, `-` representa un archivo regular. Los siguientes nueve caracteres se agrupan en propietario, grupo y otros:
 
@@ -550,11 +526,7 @@ También es posible expresar permisos usando números. Los valores son:
 
 Por ejemplo, `chmod 755 hello.py` asigna permisos de lectura, escritura y ejecución al propietario, y permisos de lectura y ejecución al grupo y al resto:
 
-```sh
-ubuntu@ubuntu:~$ chmod 755 hello.py
-ubuntu@ubuntu:~$ ls -l hello.py
--rwxr-xr-x 1 ubuntu ubuntu 48 Aug  3 20:00 hello.py
-```
+#raw(read("../examples/tp1/hello/permissions-numeric.session"), lang: "bash", block: true)
 
 Alternativamente es posible ejecutarlo directamente usando python: `python3 hello.py`
 

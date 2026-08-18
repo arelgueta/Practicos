@@ -7,7 +7,7 @@ void *saludar(void *arg) {
     return NULL;
 }
 
-int main(void) {
+int main() {
     pthread_t uno, dos;
     pthread_create(&uno, NULL, saludar, "Hola");
     pthread_create(&dos, NULL, saludar, "mundo");

@@ -1,6 +1,6 @@
-void saludar(void);
+void saludar();
 
-int main(void) {
+int main() {
     saludar();
     return 0;
 }

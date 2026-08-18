@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-int main(void) {
+int main() {
     char *buffer = malloc(4);
     buffer[4] = 1;       /* escritura fuera de limites */
     free(buffer);

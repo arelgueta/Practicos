@@ -7,11 +7,11 @@ int global_data = 4;
 int global_data_2;
 static const char message[] = "hello, world";
 
-static int marker(void) {
+static int marker() {
     return 7;
 }
 
-int main(void) {
+int main() {
     int local_data = 3;
     int *heap_data = malloc(sizeof *heap_data);
 

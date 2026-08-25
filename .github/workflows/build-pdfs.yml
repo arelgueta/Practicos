@@ -31,12 +31,14 @@ jobs:
       tex_tp2_extra: ${{ steps.filter.outputs.tex_tp2_extra }}
       tex_tp3: ${{ steps.filter.outputs.tex_tp3 }}
       tex_tp3_extra: ${{ steps.filter.outputs.tex_tp3_extra }}
+      tex_tp4: ${{ steps.filter.outputs.tex_tp4 }}
       typst_main: ${{ steps.filter.outputs.typst_main }}
       typst_extra: ${{ steps.filter.outputs.typst_extra }}
       typst_tp2: ${{ steps.filter.outputs.typst_tp2 }}
       typst_tp2_extra: ${{ steps.filter.outputs.typst_tp2_extra }}
       typst_tp3: ${{ steps.filter.outputs.typst_tp3 }}
       typst_tp3_extra: ${{ steps.filter.outputs.typst_tp3_extra }}
+      typst_tp4: ${{ steps.filter.outputs.typst_tp4 }}
       manual: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
@@ -68,6 +70,8 @@ jobs:
             tex_tp3_extra:
               - 'TP3/Practico3-extra.tex'
               - 'examples/tp3-extra/**'
+            tex_tp4:
+              - 'TP4/Practico4.tex'
             typst_main:
               - 'TP1-typst/Practico1t.typ'
               - 'TP1/*.png'
@@ -92,6 +96,9 @@ jobs:
             typst_tp3_extra:
               - 'TP3-typst/Practico3t-extra.typ'
               - 'examples/tp3-extra/**'
+              - 'fonts/**'
+            typst_tp4:
+              - 'TP4-typst/Practico4t.typ'
               - 'fonts/**'
 
   build:
@@ -139,6 +146,12 @@ jobs:
             tp: 3
             variant: ' extra'
             filter: tex_tp3_extra
+          - tex_file: TP4/Practico4.tex
+            pdf_file: TP4/Practico4.pdf
+            artifact_name: tp4-latex
+            tp: 4
+            variant: ''
+            filter: tex_tp4
 
     steps:
       - name: Check out repository
@@ -204,6 +217,12 @@ jobs:
             tp: 3
             variant: ' extra'
             filter: typst_tp3_extra
+          - typ_file: TP4-typst/Practico4t.typ
+            pdf_file: TP4-typst/Practico4t.pdf
+            artifact_name: tp4-typst
+            tp: 4
+            variant: ''
+            filter: typst_tp4
 
     steps:
       - name: Check out repository
@@ -244,12 +263,14 @@ jobs:
        needs.changes.outputs.tex_tp2_extra == 'true' ||
        needs.changes.outputs.tex_tp3 == 'true' ||
        needs.changes.outputs.tex_tp3_extra == 'true' ||
+       needs.changes.outputs.tex_tp4 == 'true' ||
        needs.changes.outputs.typst_main == 'true' ||
        needs.changes.outputs.typst_extra == 'true' ||
        needs.changes.outputs.typst_tp2 == 'true' ||
        needs.changes.outputs.typst_tp2_extra == 'true' ||
        needs.changes.outputs.typst_tp3 == 'true' ||
-       needs.changes.outputs.typst_tp3_extra == 'true')
+       needs.changes.outputs.typst_tp3_extra == 'true' ||
+       needs.changes.outputs.typst_tp4 == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write

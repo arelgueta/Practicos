@@ -1,0 +1,382 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{infobox}{
+  colback=blue!6!white, colframe=blue!45!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=INFO, fonttitle=\bfseries, coltitle=blue!45!black,
+  colbacktitle=blue!6!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{notebox}{
+  colback=black!5!white, colframe=black!25!white,
+  arc=2mm, boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  boxsep=1pt, breakable
+}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5},
+  rulecolor=\color{black!25},
+  frame=single,
+  framerule=0.5pt,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!70!black},
+  columns=fullflexible,
+  upquote=true
+}
+\lstset{style=codestyle}
+\setlist{nosep}
+
+\title{Trabajo Práctico 4 -- Planificación}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+Este TP estudia cómo Linux decide qué tarea obtiene la CPU (Central
+Processing Unit) y durante cuánto tiempo. Vas a observar prioridades,
+políticas de planificación, cambios de contexto y desalojos usando comandos y
+archivos del sistema. Los valores concretos dependen de la carga, la cantidad
+de núcleos y la versión del núcleo: registrá tus observaciones en lugar de
+copiar una salida de ejemplo.
+
+\section{El planificador y las políticas de planificación}
+
+El planificador (\emph{scheduler}) elige entre las tareas que están listas
+para ejecutarse. Una tarea puede ceder la CPU voluntariamente al bloquearse,
+por ejemplo al esperar entrada y salida (E/S, \emph{input/output}), o puede
+ser desalojada cuando el núcleo necesita ejecutar otra tarea.
+
+POSIX (\emph{Portable Operating System Interface}) define una interfaz para
+consultar y modificar políticas de planificación. Linux implementa varias de
+ellas; en este TP nos concentraremos en las tres que aparecen en el material
+original y en la llamada que permite ceder la CPU:
+
+\begin{itemize}
+  \item \texttt{SCHED\_OTHER}: es la política normal de tiempo compartido.
+  Linux intenta repartir la CPU entre las tareas aptas y calcula una prioridad
+  dinámica a partir de su comportamiento y de su valor de \texttt{nice}. No
+  es conveniente modelarla como una planificación por turnos (\emph{Round
+  Robin}) simple con un quantum (intervalo de tiempo, \emph{time slice}) fijo.
+  \item \texttt{SCHED\_FIFO} (\emph{First In, First Out}): pertenece a las
+  políticas de tiempo real y usa una prioridad estática. Una tarea continúa
+  ejecutándose hasta bloquearse, ceder la CPU, terminar o ser desalojada por
+  otra tarea de tiempo real con prioridad mayor. Las tareas con la misma
+  prioridad no reciben un quantum automático.
+  \item \texttt{SCHED\_RR} (\emph{Round Robin}): es similar a
+  \texttt{SCHED\_FIFO}, pero las tareas de tiempo real con la misma prioridad
+  se alternan mediante un intervalo de tiempo.
+  \item \texttt{sched\_yield()}: no es una política adicional. Es una llamada
+  que expresa que la tarea actual está dispuesta a ceder la CPU; su efecto
+  depende de la política y de las demás tareas listas.
+\end{itemize}
+
+Las políticas de tiempo real pueden afectar a todo el sistema. En general,
+un usuario común no puede asignárselas a sus procesos sin permisos especiales.
+No las pruebes sobre procesos del sistema ni ejecutes una tarea de tiempo real
+que nunca bloquee o termine en una máquina compartida.
+
+\begin{lstlisting}[language=bash]
+$ man 7 sched
+$ ps -eo pid,ppid,ni,pri,rtprio,stat,psr,comm --sort=pid | head
+$ chrt -p 1234
+\end{lstlisting}
+
+En la salida de \texttt{ps}, \texttt{NI} es el valor de \texttt{nice},
+\texttt{PRI} es la prioridad que muestra \texttt{procps} y \texttt{RTPRIO}
+es la prioridad de tiempo real cuando corresponde. \texttt{PSR} indica el
+procesador lógico en el que se observó la tarea. La salida exacta y la
+interpretación de algunas columnas dependen de la política y de la versión de
+las herramientas.
+
+\begin{extrabox}
+Si tenés disponible el código fuente del núcleo, buscá \texttt{\_\_schedule()}
+en el directorio \texttt{kernel/sched/}. Compará su organización con la
+descripción de \texttt{man 7 sched}. La ubicación y los detalles internos
+cambian entre versiones; el objetivo es reconocer la separación entre la
+interfaz de usuario y la implementación del planificador.
+\end{extrabox}
+
+\section{Cambios de contexto}
+
+Un cambio de contexto (\emph{context switch}) ocurre cuando el núcleo deja de
+ejecutar una tarea y guarda su estado para poder continuar luego con otra. El
+sistema de archivos virtual \texttt{/proc} (\emph{proc filesystem}) expone
+parte de esta información como si fueran archivos.
+
+El contador global de cambios de contexto aparece en la línea \texttt{ctxt}
+de \texttt{/proc/stat}:
+
+\begin{lstlisting}[language=bash]
+$ grep '^ctxt ' /proc/stat
+ctxt 123456789
+\end{lstlisting}
+
+Ese valor es acumulado desde el arranque y puede aumentar mientras observás
+la salida. Repetí el comando varias veces: incluso una máquina que parece
+inactiva ejecuta tareas de fondo, interrupciones y servicios.
+
+Para estudiar un proceso particular, mirá su archivo \texttt{status}. Las
+dos métricas siguientes separan las cesiones voluntarias de los desalojos
+involuntarios:
+
+\begin{lstlisting}[language=bash]
+$ pid=$$
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \\
+    /proc/$pid/status
+voluntary_ctxt_switches:        4
+nonvoluntary_ctxt_switches:     0
+\end{lstlisting}
+
+El contador de cesiones voluntarias aumenta cuando el proceso se bloquea o
+cede la CPU de forma explícita. El contador de desalojos involuntarios aumenta
+cuando el núcleo lo desaloja, por ejemplo para dar paso a otra tarea lista. No
+esperes que uno de los dos sea siempre cero: un mismo programa puede hacer
+ambas cosas.
+
+\begin{notebox}
+La variable especial \texttt{\$\$} contiene el PID (\emph{Process ID}) del
+shell actual. En cambio, \texttt{/proc/self/status} se refiere al proceso que
+abre el archivo. Si ejecutás \texttt{grep ... /proc/self/status}, normalmente
+estarás observando al propio \texttt{grep}, que vive muy poco tiempo. Para
+observar el shell u otro proceso, guardá su PID y construí
+\texttt{/proc/\$pid/status} como en el ejemplo.
+\end{notebox}
+
+El desalojo no es sinónimo de hiperpaginación (\emph{thrashing}). La
+hiperpaginación es un problema de memoria en el que el sistema pasa demasiado
+tiempo moviendo páginas entre la memoria principal y el área de intercambio.
+Muchos cambios de contexto pueden tener un costo de planificación, pero deben
+analizarse junto con la carga de CPU y de memoria.
+
+\begin{extrabox}
+Si está instalado, compará el contador de \texttt{/proc} con
+\texttt{pidstat -w 1} o \texttt{vmstat 1}. ¿Qué información es global y cuál
+corresponde a un proceso? También podés explorar \texttt{/proc/interrupts},
+sin modificar ningún archivo del sistema.
+\end{extrabox}
+
+\section{Observar procesos con \texttt{top}}
+
+El comando \texttt{top} actualiza continuamente una lista de tareas y
+permite cambiar su orden y enviarles señales. Probalo en una terminal:
+
+\begin{lstlisting}[language=bash]
+$ top
+$ top -H
+\end{lstlisting}
+
+La opción \texttt{-H} muestra hilos (\emph{threads}) en lugar de agruparlos
+por proceso. Dentro de \texttt{top}, las teclas más útiles para este TP son:
+
+\begin{itemize}
+  \item \texttt{P}: ordenar por porcentaje de CPU; \texttt{M}: ordenar por
+  memoria;
+  \item \texttt{1}: mostrar el uso de cada CPU lógica; \texttt{H}: alternar
+  la vista de hilos;
+  \item \texttt{k}: enviar una señal al PID elegido; \texttt{q}: salir.
+\end{itemize}
+
+Las columnas habituales son:
+
+\begin{itemize}
+  \item \texttt{PID}, \texttt{USER} y \texttt{COMMAND}: identificador,
+  propietario y comando de la tarea;
+  \item \texttt{PR} y \texttt{NI}: prioridad mostrada y valor de \texttt{nice}.
+  En procesos normales, un valor de \texttt{NI} más alto representa menor
+  preferencia relativa; los valores negativos requieren permisos adicionales;
+  \item \texttt{VIRT}, \texttt{RES} y \texttt{SHR}: memoria virtual total,
+  memoria residente y parte residente potencialmente compartida;
+  \item \texttt{S} o \texttt{STAT}: estado. \texttt{R} es ejecutando o listo,
+  \texttt{S} es sueño interrumpible, \texttt{D} es sueño ininterrumpible,
+  \texttt{T} es detenido o trazado y \texttt{Z} es zombie;
+  \item \texttt{\%CPU}, \texttt{\%MEM} y \texttt{TIME+}: uso reciente de
+  CPU, proporción de memoria física y tiempo de CPU acumulado.
+\end{itemize}
+
+El orden de la lista puede cambiar aun cuando no escribas ningún comando.
+El planificador actualiza prioridades dinámicas, aparecen y terminan tareas,
+y en una máquina con varios procesadores distintas tareas pueden ejecutarse en
+paralelo. Por eso una instantánea de \texttt{top} no alcanza para demostrar
+una regla universal.
+
+\section{Prioridad con \texttt{nice} y \texttt{renice}}
+
+El valor de \texttt{nice} modifica la preferencia relativa de los procesos de
+tiempo compartido. En Linux el rango usual va de $-20$ a $19$: un valor menor
+representa más prioridad relativa y un valor mayor representa menos. El
+comando \texttt{nice} crea el proceso con un incremento de niceness; el
+comando \texttt{renice} modifica un proceso que ya existe.
+
+\begin{lstlisting}[language=bash]
+$ nice -n 10 comando
+$ renice +5 -p 1234
+\end{lstlisting}
+
+En el primer ejemplo, \texttt{10} hace que el proceso sea menos preferido que
+uno con \texttt{NI=0}. En el segundo, \texttt{+5} incrementa el valor de
+niceness del PID indicado y también reduce su prioridad relativa. Bajar el
+valor de niceness, por ejemplo a $-5$, normalmente requiere permisos
+administrativos. No confundas \texttt{nice} con una medición de velocidad: si
+la CPU está libre, dos procesos con valores distintos pueden usar casi toda
+la CPU disponible.
+
+\section{Experimento de planificación}
+
+Vamos a comparar dos trabajos que consumen CPU. \texttt{yes} imprime una
+secuencia interminable de letras; al redirigir su salida a \texttt{/dev/null}
+la descartamos y dejamos visible principalmente el trabajo del procesador.
+Abrí \texttt{top} en una terminal y usá otra para ejecutar lo siguiente:
+
+\begin{lstlisting}[language=bash]
+$ yes > /dev/null &
+[1] 829
+$ pid1=$!
+$ nice -n 10 yes > /dev/null &
+[2] 830
+$ pid2=$!
+\end{lstlisting}
+
+Los números del ejemplo cambian en cada sistema. \texttt{\&} inicia el
+comando en segundo plano (\emph{background}), \texttt{[1]} es el número de
+trabajo del intérprete de comandos (\emph{shell}) y el otro número es su PID.
+\texttt{\$!} guarda el PID del último proceso iniciado en segundo plano.
+Observá ambos procesos en \texttt{top} durante varios
+segundos y luego consultá sus métricas:
+
+\begin{lstlisting}[language=bash]
+$ ps -o pid,ppid,ni,pri,rtprio,stat,pcpu,comm -p "$pid1,$pid2"
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \\
+    /proc/$pid1/status
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \\
+    /proc/$pid2/status
+\end{lstlisting}
+
+Ahora cambiá la prioridad relativa del primer proceso, siempre hacia una
+prioridad menor, y volvé a observar:
+
+\begin{lstlisting}[language=bash]
+$ renice +5 -p "$pid1"
+$ ps -o pid,ni,pri,pcpu,stat,comm -p "$pid1,$pid2"
+\end{lstlisting}
+
+Registrá una tabla con los valores de \texttt{NI}, \texttt{PR}, \texttt{\%CPU}
+y los dos contadores de contexto antes y después de \texttt{renice}. Contestá:
+
+\begin{enumerate}
+  \item ¿Qué cambió de manera inmediata y qué cambió sólo después de esperar?
+  \item ¿El proceso con mayor niceness siempre recibió menos CPU? Repetí la
+  prueba con poca carga y luego con dos o más procesos competidores.
+  \item ¿Qué efecto tiene la cantidad de núcleos? Relacioná la respuesta con
+  \texttt{PSR}, con la vista por CPU de \texttt{top} y con el hecho de que
+  dos procesos pueden ejecutarse en paralelo.
+  \item Compará los cambios de contexto voluntarios y no voluntarios. Proponé
+  una explicación para cualquier diferencia, separando lo que observaste de
+  lo que esperabas observar.
+\end{enumerate}
+
+Al terminar, finalizá los procesos usando una señal normal y esperá a que el
+shell recoja sus estados:
+
+\begin{lstlisting}[language=bash]
+$ kill "$pid1" "$pid2"
+$ wait "$pid1" "$pid2" 2>/dev/null
+\end{lstlisting}
+
+\begin{infobox}
+\texttt{kill} envía una señal: no significa necesariamente ``matar''. La
+señal predeterminada es \texttt{SIGTERM}, que permite a un programa terminar
+ordenadamente. \texttt{Ctrl-C} envía normalmente \texttt{SIGINT} al trabajo en
+foreground. Reservá \texttt{SIGKILL} (\texttt{kill -9}) para un proceso que no
+responde y verificá siempre el PID antes de usarlo.
+\end{infobox}
+
+\section{Control de trabajos}
+
+El intérprete de comandos distingue entre el primer plano (\emph{foreground}),
+que ocupa la terminal, y el segundo plano (\emph{background}), que permite
+volver al prompt. El número de trabajo sólo tiene sentido dentro de ese shell;
+el PID identifica al proceso en el sistema.
+Practicá el ciclo completo con un comando que tarde lo suficiente:
+
+\begin{lstlisting}[language=bash]
+$ sleep 100
+\end{lstlisting}
+
+Mientras está en foreground, apretá \texttt{Ctrl-Z}. Luego ejecutá:
+
+\begin{lstlisting}[language=bash]
+$ jobs
+$ bg %1
+$ jobs
+$ fg %1
+\end{lstlisting}
+
+El número \texttt{1} es sólo un ejemplo: usá el que muestre tu shell. Con
+\texttt{bg} el trabajo continúa en background y con \texttt{fg} vuelve al
+foreground. Podés detenerlo otra vez con \texttt{Ctrl-Z} y terminarlo con
+\texttt{kill \%1}. Relacioná cada acción con los estados que veas en
+\texttt{jobs}, \texttt{ps} y \texttt{top}.
+
+\begin{extrabox}
+Explorá \texttt{taskset -p PID} para observar la afinidad de una tarea y
+repetí el experimento usando una sola CPU, sólo si la máquina es tuya y sabés
+que no vas a afectar a otros usuarios. Como extensión, investigá
+\texttt{getrusage()} y la diferencia entre tiempo de usuario y tiempo de
+sistema.
+\end{extrabox}
+
+\section{Una analogía}
+
+Imaginá una ventanilla de banco como una CPU y a los clientes como procesos.
+El cajero atiende a una persona hasta que termina, espera que le traigan un
+documento o es interrumpido por una regla de prioridad. Una política puede
+favorecer a ciertos clientes; otra puede repartir turnos entre quienes tienen
+la misma prioridad. La analogía sirve para formular hipótesis, pero las
+mediciones de \texttt{top}, \texttt{ps} y \texttt{/proc} son las que permiten
+comprobar qué ocurrió realmente.
+
+\end{document}

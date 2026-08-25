@@ -94,8 +94,8 @@ nonvoluntary_ctxt_switches: 2
 POSIX ofrece llamadas al sistema para consultar identidad de proceso. Las funciones que vamos a usar son:
 
 ```c
-pid_t getpid(void);
-pid_t getppid(void);
+pid_t getpid();
+pid_t getppid();
 ```
 
 Creá archivo `obtenerpid.c` con este contenido:

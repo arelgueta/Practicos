@@ -141,8 +141,8 @@ También podés explorar \texttt{/proc/cpuinfo}, \texttt{/proc/meminfo} y \textt
 POSIX ofrece llamadas al sistema para consultar la identidad de un proceso. Las funciones que vamos a usar son:
 
 \begin{lstlisting}[language=C]
-pid_t getpid(void);
-pid_t getppid(void);
+pid_t getpid();
+pid_t getppid();
 \end{lstlisting}
 
 Creá el archivo \texttt{obtenerpid.c} con este contenido:

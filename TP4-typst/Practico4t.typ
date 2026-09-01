@@ -51,8 +51,8 @@ desalojada cuando el núcleo necesita ejecutar otra tarea.
 
 POSIX (*Portable Operating System Interface*) define una interfaz para
 consultar y modificar políticas de planificación. Linux implementa varias de
-ellas; en este TP nos concentraremos en las tres que aparecen en el material
-original y en la llamada que permite ceder la CPU:
+ellas; en este TP nos concentraremos en estas tres políticas y en la llamada
+que permite ceder la CPU:
 
 - `SCHED_OTHER`: es la política normal de tiempo compartido. Linux intenta
   repartir la CPU entre las tareas aptas y calcula una prioridad dinámica a

@@ -89,11 +89,19 @@ exacta y la interpretación de algunas columnas dependen de la política y de
 la versión de las herramientas.
 
 #extra[
-  Si tenés disponible el código fuente del núcleo, buscá `__schedule()` en el
-  directorio `kernel/sched/`. Compará su organización con la descripción de
-  `man 7 sched`. La ubicación y los detalles internos cambian entre versiones;
-  el objetivo es reconocer la separación entre la interfaz de usuario y la
-  implementación del planificador.
+  Si tenés disponible el código fuente del núcleo de tu distribución, hacé esta
+  actividad; no hace falta leer todo el núcleo:
+
+  1. Consultá la política del shell actual con `chrt -p $$` y anotá la salida.
+  2. Ubicá la definición de `__schedule()` con
+     `grep -R -n __schedule kernel/sched/`.
+  3. Leé esa función e identificá dónde se obtiene la siguiente tarea (por
+     ejemplo, mediante `pick_next_task`) y dónde se realiza el cambio de
+     contexto (por ejemplo, mediante `context_switch`).
+  4. Entregá una tabla de dos filas y tres columnas: concepto descrito por
+     `man 7 sched`, archivo y símbolo encontrados, y relación entre ambos.
+     Las filas deben cubrir la selección de la siguiente tarea y el cambio de
+     contexto. Si tu versión usa otros nombres o rutas, registrá la diferencia.
 ]
 
 = Cambios de contexto
@@ -279,10 +287,10 @@ $ wait "$pid1" "$pid2" 2>/dev/null
 
 = Control de trabajos
 
-El intérprete de comandos distingue entre el primer plano (*foreground*), que
-ocupa la terminal, y el segundo plano (*background*), que permite volver al
-prompt. El número de trabajo sólo tiene sentido dentro de ese shell; el PID
-identifica al proceso en el sistema.
+Como ya viste en el TP2, el intérprete de comandos distingue entre el primer
+plano (*foreground*), que ocupa la terminal, y el segundo plano
+(*background*), que permite volver al prompt. El número de trabajo sólo tiene
+sentido dentro de ese shell; el PID identifica al proceso en el sistema.
 Practicá el ciclo completo con un comando que tarde lo suficiente:
 
 ```bash
@@ -309,13 +317,3 @@ acción con los estados que veas en `jobs`, `ps` y `top`.
   vas a afectar a otros usuarios. Como extensión, investigá `getrusage()` y
   la diferencia entre tiempo de usuario y tiempo de sistema.
 ]
-
-= Una analogía
-
-Imaginá una ventanilla de banco como una CPU y a los clientes como procesos.
-El cajero atiende a una persona hasta que termina, espera que le traigan un
-documento o es interrumpido por una regla de prioridad. Una política puede
-favorecer a ciertos clientes; otra puede repartir turnos entre quienes tienen
-la misma prioridad. La analogía sirve para formular hipótesis, pero las
-mediciones de `top`, `ps` y `/proc` son las que permiten comprobar qué ocurrió
-realmente.

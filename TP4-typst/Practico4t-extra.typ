@@ -60,8 +60,8 @@ Probá la versión con competencia y luego repetila sin fijar la afinidad. Usá
 el comando correspondiente a tu implementación:
 
 ```bash
-$ TU_COMANDO --seconds 5
-$ TU_COMANDO --seconds 5 --no-pin
+$ ./nice_workers --seconds 5
+$ ./nice_workers --seconds 5 --no-pin
 ```
 
 Mientras se ejecuta, podés observar los procesos con `ps` o `top`. Registrá

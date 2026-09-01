@@ -1,0 +1,366 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{infobox}{
+  colback=blue!6!white, colframe=blue!45!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=INFO, fonttitle=\bfseries, coltitle=blue!45!black,
+  colbacktitle=blue!6!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{notebox}{
+  colback=black!5!white, colframe=black!25!white,
+  arc=2mm, boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  boxsep=1pt, breakable
+}
+
+% Caja nueva para los desafíos BONUS - POR PUNTOS de los tracks
+\newtcolorbox{bonusbox}{
+  colback=purple!6!white, colframe=purple!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=BONUS -- POR PUNTOS, fonttitle=\bfseries, coltitle=purple!55!black,
+  colbacktitle=purple!6!white, boxsep=1pt, breakable
+}
+
+% "Medalla" con el puntaje de cada track, en la misma línea del título
+\newtcbox{\trackbadge}[1][]{
+  on line, arc=1.5pt, colframe=blue!35!black, colback=blue!35!black,
+  boxrule=0pt, boxsep=1pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  fontupper=\bfseries\footnotesize\color{white}
+}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5},
+  rulecolor=\color{black!25},
+  frame=single,
+  framerule=0.5pt,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!70!black},
+  columns=fullflexible,
+  upquote=true
+}
+\lstset{style=codestyle}
+\setlist{nosep}
+
+\title{Trabajo Práctico 4 -- Ejercicios extra}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\renewcommand{\contentsname}{Tracks}
+\tableofcontents
+\newpage
+
+Estos tracks amplían el práctico de planificación con experimentos comparables.
+Registrá versión del núcleo, cantidad de núcleos lógicos y carga del sistema
+durante cada observación: los valores de CPU y de latencia no son portables
+entre máquinas.
+
+Los tracks son independientes entre sí: elegí uno después de completar el
+práctico regular y no necesitás resolver otro track para empezar. Las cajas
+EXTRA proponen una extensión opcional del track; las cajas BONUS -- POR PUNTOS
+plantean una implementación más profunda. El práctico regular no requiere un
+informe; para obtener puntos de bonus, entregá una explicación breve con
+capturas y quedate disponible para una demostración.
+
+Varios experimentos de este documento usan políticas de tiempo real o
+afinidad de CPU. No los ejecutes sobre una máquina compartida ni contra
+procesos del sistema, y asegurate de poder terminar cualquier tarea que crees
+antes de dejar la terminal.
+
+\section{Políticas de tiempo real: \texttt{SCHED\_FIFO} y \texttt{SCHED\_RR} con \texttt{chrt} (7/10)}
+\trackbadge{TRACK - 7/10}
+
+\emph{Descripción:} comparar el tiempo compartido normal con dos políticas de
+tiempo real usando un mismo programa de carga.
+
+Escribí un programa \texttt{carga.c} que ejecute un bucle de cómputo (por
+ejemplo, incrementar un contador durante varios segundos) sin bloquearse por
+E/S. Lanzá varias instancias bajo \texttt{SCHED\_OTHER}, \texttt{SCHED\_FIFO}
+y \texttt{SCHED\_RR} usando \texttt{chrt}, y compará cuánta CPU recibe cada
+una.
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -O0 -g carga.c -o carga
+$ ./carga & pid1=$!
+$ ./carga & pid2=$!
+$ chrt -p $pid1
+$ sudo chrt -f -p 10 $pid1
+$ sudo chrt -r -p 10 $pid2
+$ ps -o pid,cls,rtprio,ni,pri,pcpu,comm -p "$pid1,$pid2"
+$ top -H
+\end{lstlisting}
+
+Repetí la observación con dos procesos \texttt{SCHED\_FIFO} de la misma
+prioridad y con dos procesos \texttt{SCHED\_RR} de la misma prioridad.
+Explicá por qué \texttt{SCHED\_FIFO} puede dejar sin CPU a un proceso de
+tiempo compartido mientras el de tiempo real no se bloquea, y qué diferencia
+notás frente a \texttt{SCHED\_RR} cuando hay más de un proceso de tiempo real
+listo.
+
+Terminá siempre los procesos de tiempo real con \texttt{kill} antes de cerrar
+la terminal: un \texttt{SCHED\_FIFO} que nunca cede la CPU puede volver el
+sistema poco responsivo.
+
+\begin{extrabox}
+Consultá \texttt{man 2 sched\_setscheduler} y explicá qué devuelve
+\texttt{sched\_get\_priority\_min()} y \texttt{sched\_get\_priority\_max()}
+para cada política. Relacioná el resultado con los valores que aceptó
+\texttt{chrt} en tu experimento.
+\end{extrabox}
+
+\newpage
+\section{Afinidad de CPU con \texttt{taskset} y \texttt{sched\_getaffinity()} (5/10)}
+\trackbadge{TRACK - 5/10}
+
+\emph{Descripción:} fijar un proceso a un subconjunto de CPUs lógicas y
+observar el efecto sobre \texttt{PSR} y el uso por núcleo.
+
+\begin{enumerate}
+  \item Consultá cuántas CPUs lógicas tiene el sistema y la máscara de
+  afinidad por defecto de un proceso.
+  \item Lanzá dos procesos de carga (podés reusar \texttt{carga.c} del track
+  anterior) sin restricción de afinidad y observá en qué CPU corre cada uno
+  con la columna \texttt{PSR}.
+  \item Fijá ambos procesos a la misma CPU con \texttt{taskset} y volvé a
+  observar \texttt{\%CPU} y \texttt{PSR}.
+  \item Fijá cada proceso a una CPU distinta y compará.
+\end{enumerate}
+
+\begin{lstlisting}[language=bash]
+$ nproc
+$ taskset -p $pid1
+$ ps -o pid,psr,pcpu,comm -p "$pid1,$pid2"
+$ taskset -cp 0 $pid1
+$ taskset -cp 0 $pid2
+$ ps -o pid,psr,pcpu,comm -p "$pid1,$pid2"
+$ taskset -cp 1 $pid2
+$ ps -o pid,psr,pcpu,comm -p "$pid1,$pid2"
+\end{lstlisting}
+
+Relacioná lo observado con el hecho de que dos procesos en la misma CPU deben
+repartirse el tiempo del planificador, mientras que en CPUs distintas pueden
+ejecutarse en paralelo. Explicá qué es una máscara de afinidad y por qué
+reducirla no aumenta la prioridad de un proceso.
+
+\begin{extrabox}
+Desde el propio programa, usá \texttt{sched\_getaffinity()} y
+\texttt{sched\_setaffinity()} para leer e imprimir la máscara de CPUs
+disponibles al inicio. Compará el resultado con el de \texttt{taskset -p}
+ejecutado externamente sobre el mismo PID.
+\end{extrabox}
+
+\newpage
+\section{Límites de CPU con \texttt{cgroups} v2 (6/10)}
+\trackbadge{TRACK - 6/10}
+
+\emph{Descripción:} crear un grupo de control (\emph{cgroup}) y limitar la
+cuota de CPU de los procesos que contiene.
+
+Trabajá en una máquina de prueba donde tengas permisos sobre
+\texttt{/sys/fs/cgroup}. Necesitás un sistema con \emph{cgroups} v2 montado;
+comprobalo antes de continuar.
+
+\begin{lstlisting}[language=bash]
+$ cat /sys/fs/cgroup/cgroup.controllers
+$ sudo mkdir /sys/fs/cgroup/practico-so
+$ cat /sys/fs/cgroup/practico-so/cpu.max
+$ ./carga & pid=$!
+$ echo $pid | sudo tee /sys/fs/cgroup/practico-so/cgroup.procs
+$ cat /sys/fs/cgroup/practico-so/cgroup.procs
+$ top -p $pid
+\end{lstlisting}
+
+Con el proceso ya dentro del \emph{cgroup} y consumiendo CPU, limitá su cuota
+a un 20\% aproximado de una CPU y observá cómo cambia \texttt{\%CPU} en
+\texttt{top}. \texttt{cpu.max} acepta dos valores: la cuota en microsegundos
+y el período; por ejemplo, \texttt{20000 100000} permite usar 20\,ms de cada
+100\,ms.
+
+\begin{lstlisting}[language=bash]
+$ echo "20000 100000" | sudo tee /sys/fs/cgroup/practico-so/cpu.max
+$ top -p $pid
+$ echo "max 100000" | sudo tee /sys/fs/cgroup/practico-so/cpu.max
+$ top -p $pid
+\end{lstlisting}
+
+Al terminar, sacá el proceso del \emph{cgroup}, matalo si sigue vivo y borrá
+el directorio. No modifiques ni elimines \emph{cgroups} que no hayas creado
+vos.
+
+\begin{lstlisting}[language=bash]
+$ kill $pid
+$ sudo rmdir /sys/fs/cgroup/practico-so
+\end{lstlisting}
+
+Explicá la diferencia entre limitar la cuota de CPU de un \emph{cgroup} y
+bajar la prioridad (\texttt{nice}) de un proceso: ¿en qué se parecen los
+efectos observables y en qué se diferencia el mecanismo?
+
+\begin{extrabox}
+Poné dos procesos de carga en el mismo \emph{cgroup} y explorá
+\texttt{cpu.weight} en lugar de \texttt{cpu.max}. Compará cómo reparte la CPU
+entre ambos frente a dejarlos sin \emph{cgroup}.
+\end{extrabox}
+
+\newpage
+\section{Trazar al planificador con \texttt{perf sched} (8/10)}
+\trackbadge{TRACK - 8/10}
+
+\emph{Descripción:} usar \texttt{perf} para registrar eventos de
+planificación y relacionarlos con los contadores de \texttt{/proc} que ya
+usaste en el práctico regular.
+
+Necesitás permisos para usar \texttt{perf record}; en muchos sistemas de
+prueba alcanza con \texttt{sudo} o con ajustar
+\texttt{kernel.perf\_event\_paranoid} temporalmente. No modifiques ese
+parámetro en una máquina compartida sin autorización.
+
+\begin{lstlisting}[language=bash]
+$ perf --version
+$ sudo perf sched record -- ./carga
+$ sudo perf sched latency
+$ sudo perf sched map | head -50
+\end{lstlisting}
+
+\texttt{perf sched latency} resume, por tarea, cuánto tiempo esperó para
+ejecutarse y cuántas veces fue planificada. \texttt{perf sched map} muestra,
+en una línea de tiempo por CPU, cuándo cada tarea entra y sale del
+procesador.
+
+Repetí la traza mientras corren dos o más instancias de \texttt{carga} con
+distinta niceness, y buscá en la salida los momentos en que una tarea
+desaloja a otra. Relacioná lo que ves con \texttt{voluntary\_ctxt\_switches}
+y \texttt{nonvoluntary\_ctxt\_switches} de \texttt{/proc/<pid>/status} para
+las mismas tareas durante el mismo intervalo.
+
+\begin{bonusbox}
+Escribí un script que combine tres fuentes para un mismo experimento: el
+resumen de \texttt{perf sched latency}, los contadores de
+\texttt{/proc/<pid>/status} antes y después, y una tabla de \texttt{\%CPU}
+tomada de \texttt{ps} a intervalos regulares.
+
+El informe debe identificar al menos un caso de desalojo visible en
+\texttt{perf sched map} y explicar, con los tres tipos de dato, por qué
+ocurrió en ese momento y no antes.
+
+Compará el resultado con el mismo experimento corrido con
+\texttt{SCHED\_OTHER} y con \texttt{SCHED\_RR} y discutí qué cambia en la
+frecuencia y el motivo de los desalojos.
+\end{bonusbox}
+
+\newpage
+\section{\texttt{sched\_yield()} y costo de un cambio de contexto (4/10)}
+\trackbadge{TRACK - 4/10}
+
+\emph{Descripción:} medir cuánto tarda un cambio de contexto provocado
+voluntariamente y compararlo con uno involuntario.
+
+Escribí un programa \texttt{yield.c} que en un bucle llame a
+\texttt{sched\_yield()} muchas veces (por ejemplo, un millón) y mida el
+tiempo total con \texttt{clock\_gettime(CLOCK\_MONOTONIC, ...)}. Dividí el
+tiempo total por la cantidad de llamadas para estimar un costo promedio.
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -O0 -g yield.c -o yield
+$ ./yield
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' /proc/self/status
+\end{lstlisting}
+
+Corré el mismo programa solo en el sistema y luego con otro proceso de carga
+compitiendo por la misma CPU (usá \texttt{taskset} para forzarlos a la misma
+CPU lógica). Compará el costo promedio de \texttt{sched\_yield()} en ambos
+casos y contá cuántos cambios de contexto voluntarios e involuntarios
+acumuló el proceso en \texttt{/proc/<pid>/status}.
+
+Explicá por qué \texttt{sched\_yield()} no garantiza que otra tarea
+específica reciba la CPU, y por qué el costo medido depende de si hay otra
+tarea lista para ejecutarse en esa misma CPU.
+
+\begin{extrabox}
+Repetí la medición reservando el proceso a una sola CPU con \texttt{taskset
+-c} y comparala contra dejarlo sin restricción de afinidad en una máquina con
+varios núcleos libres.
+\end{extrabox}
+
+\newpage
+\section{Prioridad dinámica, \texttt{nice} y \emph{starvation} (6/10)}
+\trackbadge{TRACK - 6/10}
+
+\emph{Descripción:} provocar un escenario de inanición (\emph{starvation})
+leve entre procesos de distinta niceness y decidir si corresponde llamarlo
+así.
+
+Lanzá cuatro o más procesos de carga: la mayoría con \texttt{nice -n 19}
+(mínima preferencia) y uno solo con \texttt{nice -n -5} o \texttt{nice -n 0},
+todos compitiendo por la misma cantidad reducida de CPUs lógicas (podés usar
+\texttt{taskset} para limitarlos a una o dos CPUs).
+
+\begin{lstlisting}[language=bash]
+$ taskset -c 0 nice -n 19 ./carga & p1=$!
+$ taskset -c 0 nice -n 19 ./carga & p2=$!
+$ taskset -c 0 nice -n 19 ./carga & p3=$!
+$ taskset -c 0 nice -n -5 ./carga & p4=$!
+$ ps -o pid,ni,pri,pcpu,comm -p "$p1,$p2,$p3,$p4"
+$ watch -n 1 'ps -o pid,ni,pri,pcpu,comm -p "'"$p1,$p2,$p3,$p4"'"'
+\end{lstlisting}
+
+Registrá el \texttt{\%CPU} de cada proceso a lo largo de al menos un minuto.
+Contestá: ¿alguno de los procesos con \texttt{nice 19} llegó a \texttt{\%CPU}
+cercano a cero de forma sostenida, o todos recibieron algo de tiempo aunque
+fuera poco? Investigá por qué \texttt{SCHED\_OTHER} en Linux está diseñado
+para evitar la inanición total incluso con niceness muy dispar, a diferencia
+de lo que podría ocurrir con una prioridad estática mal configurada en una
+política de tiempo real.
+
+\begin{extrabox}
+Repetí el experimento reemplazando al proceso de \texttt{nice -5} por uno
+\texttt{SCHED\_FIFO} de baja prioridad de tiempo real (por ejemplo,
+\texttt{chrt -f 1}) y compará: ¿ahora sí lográs que los procesos
+\texttt{SCHED\_OTHER} queden sin CPU? Explicá la diferencia de garantías
+entre ambas políticas.
+\end{extrabox}
+
+\end{document}

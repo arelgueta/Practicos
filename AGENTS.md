@@ -2,12 +2,31 @@
 
 Read [CONTEXT.md](./CONTEXT.md) before creating or revising TP material. It defines the intended role of regular TPs, inline `EXTRA` prompts, `-extra` companion documents, tracks, and bonus-point tasks.
 
+## Extra TP introductions
+
+Start `-extra` documents directly with their contents after the title and table
+of contents. Keep prerequisites, track relationships, and measurement caveats
+inside the track that needs them; do not add a document-wide generic preamble
+about those topics.
+
+## Student implementation languages
+
+Describe student programs by their behavior and interface, leaving the
+implementation language and filename extension open unless the language is the
+learning objective. Use neutral command placeholders in examples; a
+language-specific invocation is optional context, not a requirement.
+
 ## Terminology in Spanish material
 
 When introducing an acronym or technical keyword in Spanish prose, clarify it
 with the English expansion or term in parentheses on first use. For example,
 write `ELF (Executable and Linkable Format)`. Keep the Spanish wording as the
 main term and use the English parenthetical to disambiguate the concept.
+
+## Spanish punctuation
+
+In Spanish questions and exclamations, use only the closing question and
+exclamation symbols; omit the corresponding opening symbols.
 
 ## Source files and included examples
 

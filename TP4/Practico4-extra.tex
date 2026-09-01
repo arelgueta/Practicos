@@ -2,7 +2,6 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
 \usepackage[spanish,es-noshorthands]{babel}
 \usepackage{xcolor}
 \usepackage[most]{tcolorbox}
@@ -24,55 +23,28 @@
 }
 \fancyfoot[C]{\thepage\ / \pageref{LastPage}}
 
-\newtcolorbox{infobox}{
-  colback=blue!6!white, colframe=blue!45!white,
+\newtcolorbox{trackbox}[1]{
+  colback=green!7!white, colframe=green!45!black,
   arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  title=INFO, fonttitle=\bfseries, coltitle=blue!45!black,
-  colbacktitle=blue!6!white, boxsep=1pt, breakable
+  title=TRACK -- #1, fonttitle=\bfseries, coltitle=green!35!black,
+  colbacktitle=green!7!white, boxsep=1pt, breakable
 }
 
-\newtcolorbox{extrabox}{
-  colback=orange!8!white, colframe=orange!55!white,
-  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
-  colbacktitle=orange!8!white, boxsep=1pt, breakable
-}
-
-\newtcolorbox{notebox}{
-  colback=black!5!white, colframe=black!25!white,
-  arc=2mm, boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  boxsep=1pt, breakable
-}
-
-% Caja nueva para los desafíos BONUS - POR PUNTOS de los tracks
 \newtcolorbox{bonusbox}{
-  colback=purple!6!white, colframe=purple!55!white,
+  colback=red!7!white, colframe=red!55!black,
   arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  title=BONUS -- POR PUNTOS, fonttitle=\bfseries, coltitle=purple!55!black,
-  colbacktitle=purple!6!white, boxsep=1pt, breakable
-}
-
-% "Medalla" con el puntaje de cada track, en la misma línea del título
-\newtcbox{\trackbadge}[1][]{
-  on line, arc=1.5pt, colframe=blue!35!black, colback=blue!35!black,
-  boxrule=0pt, boxsep=1pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
-  fontupper=\bfseries\footnotesize\color{white}
+  title=BONUS -- POR PUNTOS, fonttitle=\bfseries, coltitle=red!55!black,
+  colbacktitle=red!7!white, boxsep=1pt, breakable
 }
 
 \lstdefinestyle{codestyle}{
-  backgroundcolor=\color{black!5},
-  rulecolor=\color{black!25},
-  frame=single,
-  framerule=0.5pt,
-  basicstyle=\ttfamily\small,
-  breaklines=true,
-  showstringspaces=false,
-  tabsize=4,
+  backgroundcolor=\color{black!5}, rulecolor=\color{black!25},
+  frame=single, framerule=0.5pt, basicstyle=\ttfamily\small,
+  breaklines=true, showstringspaces=false, tabsize=4,
   keywordstyle=\color{blue!60!black}\bfseries,
   commentstyle=\color{green!40!black},
   stringstyle=\color{orange!70!black},
-  columns=fullflexible,
-  upquote=true
+  columns=fullflexible, upquote=true
 }
 \lstset{style=codestyle}
 \setlist{nosep}
@@ -82,6 +54,7 @@
 \date{}
 
 \begin{document}
+\renewcommand{\contentsname}{Tracks}
 \maketitle
 \thispagestyle{fancy}
 \begin{center}
@@ -89,278 +62,250 @@ SISTEMAS OPERATIVOS
 \end{center}
 \newpage
 
-\renewcommand{\contentsname}{Tracks}
 \tableofcontents
 \newpage
 
-Estos tracks amplían el práctico de planificación con experimentos comparables.
-Registrá versión del núcleo, cantidad de núcleos lógicos y carga del sistema
-durante cada observación: los valores de CPU y de latencia no son portables
-entre máquinas.
+\section{Desigualdad de CPU con \texttt{nice} (6/10)}
 
-Los tracks son independientes entre sí: elegí uno después de completar el
-práctico regular y no necesitás resolver otro track para empezar. Las cajas
-EXTRA proponen una extensión opcional del track; las cajas BONUS -- POR PUNTOS
-plantean una implementación más profunda. El práctico regular no requiere un
-informe; para obtener puntos de bonus, entregá una explicación breve con
-capturas y quedate disponible para una demostración.
+\begin{trackbox}{6/10}
+\textbf{Descripción:} medir cómo una preferencia relativa del planificador se
+convierte en una diferencia de CPU sólo cuando hay tareas competidoras.
+\end{trackbox}
 
-Varios experimentos de este documento usan políticas de tiempo real o
-afinidad de CPU. No los ejecutes sobre una máquina compartida ni contra
-procesos del sistema, y asegurate de poder terminar cualquier tarea que crees
-antes de dejar la terminal.
+El valor de \texttt{nice} modifica la preferencia relativa de una tarea de
+tiempo compartido: un valor menor favorece al proceso y uno mayor lo
+desfavorece. No es un límite de CPU ni una medición de velocidad. El rango
+habitual de Linux va de $-20$ a $19$; bajar el valor normalmente requiere
+permisos adicionales.
 
-\section{Políticas de tiempo real: \texttt{SCHED\_FIFO} y \texttt{SCHED\_RR} con \texttt{chrt} (7/10)}
-\trackbadge{TRACK - 7/10}
+Escribí un programa o script que lance dos trabajadores CPU-bound idénticos.
+Cada trabajador debe incrementar un contador durante una cantidad configurable
+de segundos y comunicar sus incrementos por segundo y su tiempo de CPU. La
+interfaz debe aceptar una duración con \texttt{--seconds N} y la opción
+\texttt{--no-pin}. El programa debe:
 
-\emph{Descripción:} comparar el tiempo compartido normal con dos políticas de
-tiempo real usando un mismo programa de carga.
+\begin{itemize}[leftmargin=*]
+  \item asignar, por defecto, \texttt{nice=0} al trabajador favorecido y
+  \texttt{nice=19} al otro;
+  \item ejecutar ambos trabajadores sobre una misma CPU, usando afinidad de
+  CPU o una herramienta equivalente;
+  \item informar el valor efectivo de \texttt{nice}, los incrementos de cada
+  intervalo y el total de cada trabajador;
+  \item terminar automáticamente después de, por ejemplo, cinco segundos.
+\end{itemize}
 
-Escribí un programa \texttt{carga.c} que ejecute un bucle de cómputo (por
-ejemplo, incrementar un contador durante varios segundos) sin bloquearse por
-E/S. Lanzá varias instancias bajo \texttt{SCHED\_OTHER}, \texttt{SCHED\_FIFO}
-y \texttt{SCHED\_RR} usando \texttt{chrt}, y compará cuánta CPU recibe cada
-una.
+Probá la versión con competencia y luego repetila sin fijar la afinidad. Usá
+el comando correspondiente a tu implementación:
 
 \begin{lstlisting}[language=bash]
-$ gcc -Wall -Wextra -O0 -g carga.c -o carga
-$ ./carga & pid1=$!
-$ ./carga & pid2=$!
-$ chrt -p $pid1
-$ sudo chrt -f -p 10 $pid1
-$ sudo chrt -r -p 10 $pid2
-$ ps -o pid,cls,rtprio,ni,pri,pcpu,comm -p "$pid1,$pid2"
-$ top -H
+$ TU_COMANDO --seconds 5
+$ TU_COMANDO --seconds 5 --no-pin
 \end{lstlisting}
 
-Repetí la observación con dos procesos \texttt{SCHED\_FIFO} de la misma
-prioridad y con dos procesos \texttt{SCHED\_RR} de la misma prioridad.
-Explicá por qué \texttt{SCHED\_FIFO} puede dejar sin CPU a un proceso de
-tiempo compartido mientras el de tiempo real no se bloquea, y qué diferencia
-notás frente a \texttt{SCHED\_RR} cuando hay más de un proceso de tiempo real
-listo.
+Mientras se ejecuta, podés observar los procesos con \texttt{ps} o
+\texttt{top}. Registrá \texttt{NI}, \texttt{PSR}, \texttt{\%CPU}, los
+incrementos por intervalo y el cociente entre los contadores finales. No hace
+falta usar \texttt{NI=-20}: la comparación $0$ contra $19$ evita depender de
+permisos administrativos. Si probás un valor negativo, anotá el error y no
+ejecutes la prueba sobre procesos del sistema.
 
-Terminá siempre los procesos de tiempo real con \texttt{kill} antes de cerrar
-la terminal: un \texttt{SCHED\_FIFO} que nunca cede la CPU puede volver el
-sistema poco responsivo.
+Algunas preguntas interesantes para considerar:
 
-\begin{extrabox}
-Consultá \texttt{man 2 sched\_setscheduler} y explicá qué devuelve
-\texttt{sched\_get\_priority\_min()} y \texttt{sched\_get\_priority\_max()}
-para cada política. Relacioná el resultado con los valores que aceptó
-\texttt{chrt} en tu experimento.
-\end{extrabox}
+\begin{itemize}[leftmargin=*]
+  \item Por qué la diferencia es grande al compartir una CPU y casi
+  desaparece al dejar que cada proceso use cualquier CPU disponible?
+  \item El proceso con mayor \texttt{nice} siempre recibe menos CPU? Separá
+  la preferencia del resultado observado.
+  \item Qué diferencia hay entre contar iteraciones y medir tiempo de CPU?
+  \item Qué cambia si invertís los valores de \texttt{nice} o ejecutás tres
+  trabajadores?
+\end{itemize}
+
+Consultá \texttt{man 7 sched} y explicá qué parte de la observación depende de
+la política normal de tiempo compartido y qué parte depende de la carga creada
+por el experimento.
 
 \newpage
-\section{Afinidad de CPU con \texttt{taskset} y \texttt{sched\_getaffinity()} (5/10)}
-\trackbadge{TRACK - 5/10}
+\section{Cuota de CPU con cgroups v2 (7/10)}
 
-\emph{Descripción:} fijar un proceso a un subconjunto de CPUs lógicas y
-observar el efecto sobre \texttt{PSR} y el uso por núcleo.
+\begin{trackbox}{7/10}
+\textbf{Descripción:} aplicar un límite de ancho de banda de CPU a un grupo de
+procesos y comprobarlo con los contadores del núcleo.
+\end{trackbox}
 
-\begin{enumerate}
-  \item Consultá cuántas CPUs lógicas tiene el sistema y la máscara de
-  afinidad por defecto de un proceso.
-  \item Lanzá dos procesos de carga (podés reusar \texttt{carga.c} del track
-  anterior) sin restricción de afinidad y observá en qué CPU corre cada uno
-  con la columna \texttt{PSR}.
-  \item Fijá ambos procesos a la misma CPU con \texttt{taskset} y volvé a
-  observar \texttt{\%CPU} y \texttt{PSR}.
-  \item Fijá cada proceso a una CPU distinta y compará.
-\end{enumerate}
+Un \emph{control group} (cgroup) agrupa procesos en una jerarquía. El
+controlador \texttt{cpu} puede repartir tiempo por peso o imponer un límite
+absoluto. En este track vas a usar cgroups v2 y \texttt{cpu.max}; no lo
+confundas con \texttt{nice} ni con \texttt{cpu.weight}.
 
-\begin{lstlisting}[language=bash]
-$ nproc
-$ taskset -p $pid1
-$ ps -o pid,psr,pcpu,comm -p "$pid1,$pid2"
-$ taskset -cp 0 $pid1
-$ taskset -cp 0 $pid2
-$ ps -o pid,psr,pcpu,comm -p "$pid1,$pid2"
-$ taskset -cp 1 $pid2
-$ ps -o pid,psr,pcpu,comm -p "$pid1,$pid2"
-\end{lstlisting}
-
-Relacioná lo observado con el hecho de que dos procesos en la misma CPU deben
-repartirse el tiempo del planificador, mientras que en CPUs distintas pueden
-ejecutarse en paralelo. Explicá qué es una máscara de afinidad y por qué
-reducirla no aumenta la prioridad de un proceso.
-
-\begin{extrabox}
-Desde el propio programa, usá \texttt{sched\_getaffinity()} y
-\texttt{sched\_setaffinity()} para leer e imprimir la máscara de CPUs
-disponibles al inicio. Compará el resultado con el de \texttt{taskset -p}
-ejecutado externamente sobre el mismo PID.
-\end{extrabox}
-
-\newpage
-\section{Límites de CPU con \texttt{cgroups} v2 (6/10)}
-\trackbadge{TRACK - 6/10}
-
-\emph{Descripción:} crear un grupo de control (\emph{cgroup}) y limitar la
-cuota de CPU de los procesos que contiene.
-
-Trabajá en una máquina de prueba donde tengas permisos sobre
-\texttt{/sys/fs/cgroup}. Necesitás un sistema con \emph{cgroups} v2 montado;
-comprobalo antes de continuar.
+Escribí un programa independiente \texttt{cpu\_burn.c}. Debe aceptar una
+duración, ejecutar un loop que consuma CPU, imprimir un contador
+aproximadamente cada segundo y mostrar al final su tiempo de usuario y de
+sistema. Compilalo sin optimizar el trabajo fuera del loop:
 
 \begin{lstlisting}[language=bash]
-$ cat /sys/fs/cgroup/cgroup.controllers
-$ sudo mkdir /sys/fs/cgroup/practico-so
-$ cat /sys/fs/cgroup/practico-so/cpu.max
-$ ./carga & pid=$!
-$ echo $pid | sudo tee /sys/fs/cgroup/practico-so/cgroup.procs
-$ cat /sys/fs/cgroup/practico-so/cgroup.procs
-$ top -p $pid
+$ gcc -Wall -Wextra -O0 -g cpu_burn.c -o cpu_burn
 \end{lstlisting}
 
-Con el proceso ya dentro del \emph{cgroup} y consumiendo CPU, limitá su cuota
-a un 20\% aproximado de una CPU y observá cómo cambia \texttt{\%CPU} en
-\texttt{top}. \texttt{cpu.max} acepta dos valores: la cuota en microsegundos
-y el período; por ejemplo, \texttt{20000 100000} permite usar 20\,ms de cada
-100\,ms.
+Verificá el entorno antes de modificar nada:
 
 \begin{lstlisting}[language=bash]
-$ echo "20000 100000" | sudo tee /sys/fs/cgroup/practico-so/cpu.max
-$ top -p $pid
-$ echo "max 100000" | sudo tee /sys/fs/cgroup/practico-so/cpu.max
-$ top -p $pid
+$ stat -fc %T /sys/fs/cgroup
+$ grep -w cpu /sys/fs/cgroup/cgroup.controllers
 \end{lstlisting}
 
-Al terminar, sacá el proceso del \emph{cgroup}, matalo si sigue vivo y borrá
-el directorio. No modifiques ni elimines \emph{cgroups} que no hayas creado
-vos.
+La primera orden debe indicar \texttt{cgroup2fs} y la segunda debe mostrar el
+controlador \texttt{cpu}. Usá un subárbol de cgroup que puedas administrar en tu
+propia máquina. Si tu distribución usa systemd, podés crear la unidad con
+\texttt{systemd-run --user} y usar el cgroup de esa unidad. No montes ni
+desmontes cgroups, no muevas procesos del sistema y no modifiques la jerarquía
+global.
+
+Suponiendo que \texttt{\$CGROUP\_DIR} es un cgroup vacío que podés administrar:
 
 \begin{lstlisting}[language=bash]
-$ kill $pid
-$ sudo rmdir /sys/fs/cgroup/practico-so
+$ printf '25000 100000\n' > "$CGROUP_DIR/cpu.max"
+$ ./cpu_burn 10 > normal.txt &
+$ pid_normal=$!
+$ ./cpu_burn 10 > limitado.txt &
+$ pid_limitado=$!
+$ printf '%s\n' "$pid_limitado" > "$CGROUP_DIR/cgroup.procs"
+$ wait "$pid_normal" "$pid_limitado"
+$ cat "$CGROUP_DIR/cpu.max"
+$ cat "$CGROUP_DIR/cpu.stat"
 \end{lstlisting}
 
-Explicá la diferencia entre limitar la cuota de CPU de un \emph{cgroup} y
-bajar la prioridad (\texttt{nice}) de un proceso: ¿en qué se parecen los
-efectos observables y en qué se diferencia el mecanismo?
+El par \texttt{25000 100000} está expresado en microsegundos: el grupo puede
+usar como máximo 25.000 microsegundos de cada período de 100.000, es decir,
+aproximadamente un cuarto de una CPU. Repetí el experimento con
+\texttt{50000 100000} y con \texttt{max 100000}. Si usás
+\texttt{systemd-run}, el equivalente es \texttt{--property=CPUQuota=25\%};
+localizá el cgroup de la unidad y leé los mismos archivos.
 
-\begin{extrabox}
-Poné dos procesos de carga en el mismo \emph{cgroup} y explorá
-\texttt{cpu.weight} en lugar de \texttt{cpu.max}. Compará cómo reparte la CPU
-entre ambos frente a dejarlos sin \emph{cgroup}.
-\end{extrabox}
+Compará los contadores de ambos programas y registrá \texttt{usage\_usec},
+\texttt{nr\_periods}, \texttt{nr\_throttled} y \texttt{throttled\_usec}. El
+límite puede producir intervalos desparejos, pero el total de CPU del grupo
+limitado debe quedar cerca de su cuota y mostrar eventos de \emph{throttling}.
+Al terminar, esperá a que el cgroup quede vacío y eliminá sólo el directorio
+que creaste.
 
-\newpage
-\section{Trazar al planificador con \texttt{perf sched} (8/10)}
-\trackbadge{TRACK - 8/10}
+Algunas preguntas interesantes para considerar:
 
-\emph{Descripción:} usar \texttt{perf} para registrar eventos de
-planificación y relacionarlos con los contadores de \texttt{/proc} que ya
-usaste en el práctico regular.
+\begin{itemize}[leftmargin=*]
+  \item Por qué \texttt{cpu.max} es un límite y \texttt{nice} es sólo una
+  preferencia relativa?
+  \item Por qué un grupo con dos procesos comparte la misma cuota?
+  \item Qué significan \texttt{nr\_throttled} y
+  \texttt{throttled\_usec}?
+  \item Por qué el límite se expresa como tiempo por período y no como un
+  porcentaje de la máquina completa?
+  \item Qué diferencia observarías si cambiaras \texttt{cpu.max} por
+  \texttt{cpu.weight}?
+\end{itemize}
 
-Necesitás permisos para usar \texttt{perf record}; en muchos sistemas de
-prueba alcanza con \texttt{sudo} o con ajustar
-\texttt{kernel.perf\_event\_paranoid} temporalmente. No modifiques ese
-parámetro en una máquina compartida sin autorización.
-
-\begin{lstlisting}[language=bash]
-$ perf --version
-$ sudo perf sched record -- ./carga
-$ sudo perf sched latency
-$ sudo perf sched map | head -50
-\end{lstlisting}
-
-\texttt{perf sched latency} resume, por tarea, cuánto tiempo esperó para
-ejecutarse y cuántas veces fue planificada. \texttt{perf sched map} muestra,
-en una línea de tiempo por CPU, cuándo cada tarea entra y sale del
-procesador.
-
-Repetí la traza mientras corren dos o más instancias de \texttt{carga} con
-distinta niceness, y buscá en la salida los momentos en que una tarea
-desaloja a otra. Relacioná lo que ves con \texttt{voluntary\_ctxt\_switches}
-y \texttt{nonvoluntary\_ctxt\_switches} de \texttt{/proc/<pid>/status} para
-las mismas tareas durante el mismo intervalo.
+Consultá la sección del controlador de CPU de la documentación de cgroups v2
+y registrá qué permisos o delegación usa tu entorno.
 
 \begin{bonusbox}
-Escribí un script que combine tres fuentes para un mismo experimento: el
-resumen de \texttt{perf sched latency}, los contadores de
-\texttt{/proc/<pid>/status} antes y después, y una tabla de \texttt{\%CPU}
-tomada de \texttt{ps} a intervalos regulares.
+Implementá un lanzador \texttt{cgroup-run} con la interfaz
+\texttt{cgroup-run --quota PERCENT -- COMMAND [ARGS...]}. El porcentaje
+representa la cuota de una CPU y el período puede ser fijo en 100000
+microsegundos.
 
-El informe debe identificar al menos un caso de desalojo visible en
-\texttt{perf sched map} y explicar, con los tres tipos de dato, por qué
-ocurrió en ese momento y no antes.
+El lanzador debe:
 
-Compará el resultado con el mismo experimento corrido con
-\texttt{SCHED\_OTHER} y con \texttt{SCHED\_RR} y discutí qué cambia en la
-frecuencia y el motivo de los desalojos.
+\begin{itemize}[leftmargin=*]
+  \item crear un cgroup privado en un subárbol que puedas administrar;
+  \item traducir la cuota a \texttt{cpu.max} y colocar el comando y sus
+  descendientes en el cgroup antes de que el comando empiece a ejecutar;
+  \item mostrar periódicamente \texttt{cpu.stat} mientras el comando está
+  activo;
+  \item manejar terminación normal, error de ejecución y \texttt{Ctrl-C},
+  terminando el grupo de procesos y esperando a que el cgroup quede vacío;
+  \item eliminar sólo el cgroup que creó y devolver el estado del comando.
+\end{itemize}
+
+Probalo con un trabajador CPU-bound, con un shell que lance un descendiente y
+interrumpiéndolo con \texttt{Ctrl-C}. Verificá que la cuota se refleje en
+\texttt{usage\_usec} y \texttt{nr\_throttled}, y que no queden procesos ni
+directorios luego de cada prueba. Repetí con 25\%, 50\% y 100\%.
+
+Entregá capturas de la cuota, de \texttt{cpu.stat} y de la limpieza final,
+junto con una explicación de cómo evitaste que el comando ejecutara fuera del
+cgroup.
 \end{bonusbox}
 
 \newpage
-\section{\texttt{sched\_yield()} y costo de un cambio de contexto (4/10)}
-\trackbadge{TRACK - 4/10}
+\section{Presupuesto de CPU y límite de tiempo (6/10)}
 
-\emph{Descripción:} medir cuánto tarda un cambio de contexto provocado
-voluntariamente y compararlo con uno involuntario.
+\begin{trackbox}{6/10}
+\textbf{Descripción:} construir un ejecutor acotado que distinga tiempo de
+CPU de tiempo transcurrido y pueda limpiar un grupo de procesos.
+\end{trackbox}
 
-Escribí un programa \texttt{yield.c} que en un bucle llame a
-\texttt{sched\_yield()} muchas veces (por ejemplo, un millón) y mida el
-tiempo total con \texttt{clock\_gettime(CLOCK\_MONOTONIC, ...)}. Dividí el
-tiempo total por la cantidad de llamadas para estimar un costo promedio.
+El tiempo de CPU mide cuánto ejecutó una tarea; el tiempo transcurrido también
+incluye esperas y bloqueos. Escribí \texttt{runlimit.c}, un programa con esta
+interfaz:
 
-\begin{lstlisting}[language=bash]
-$ gcc -Wall -Wextra -O0 -g yield.c -o yield
-$ ./yield
-$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' /proc/self/status
+\begin{lstlisting}
+./runlimit CPU_SECONDS WALL_SECONDS -- COMMAND [ARGS...]
 \end{lstlisting}
 
-Corré el mismo programa solo en el sistema y luego con otro proceso de carga
-compitiendo por la misma CPU (usá \texttt{taskset} para forzarlos a la misma
-CPU lógica). Compará el costo promedio de \texttt{sched\_yield()} en ambos
-casos y contá cuántos cambios de contexto voluntarios e involuntarios
-acumuló el proceso en \texttt{/proc/<pid>/status}.
+El programa debe:
 
-Explicá por qué \texttt{sched\_yield()} no garantiza que otra tarea
-específica reciba la CPU, y por qué el costo medido depende de si hay otra
-tarea lista para ejecutarse en esa misma CPU.
+\begin{itemize}[leftmargin=*]
+  \item crear un hijo y hacer que pertenezca a un grupo de procesos propio;
+  \item aplicar en el hijo \texttt{setrlimit(RLIMIT\_CPU, ...)} antes de
+  \texttt{execvp()};
+  \item usar \texttt{clock\_gettime(CLOCK\_MONOTONIC, ...)} y
+  \texttt{wait4(..., WNOHANG, ...)} para controlar el límite de tiempo
+  transcurrido;
+  \item si vence ese límite, enviar \texttt{SIGTERM} al grupo completo,
+  esperar un intervalo corto y usar \texttt{SIGKILL} sólo para los
+  descendientes que todavía queden;
+  \item informar si el comando terminó normalmente o por una señal, además de
+  su tiempo de usuario, tiempo de sistema y tiempo transcurrido.
+\end{itemize}
 
-\begin{extrabox}
-Repetí la medición reservando el proceso a una sola CPU con \texttt{taskset
--c} y comparala contra dejarlo sin restricción de afinidad en una máquina con
-varios núcleos libres.
-\end{extrabox}
-
-\newpage
-\section{Prioridad dinámica, \texttt{nice} y \emph{starvation} (6/10)}
-\trackbadge{TRACK - 6/10}
-
-\emph{Descripción:} provocar un escenario de inanición (\emph{starvation})
-leve entre procesos de distinta niceness y decidir si corresponde llamarlo
-así.
-
-Lanzá cuatro o más procesos de carga: la mayoría con \texttt{nice -n 19}
-(mínima preferencia) y uno solo con \texttt{nice -n -5} o \texttt{nice -n 0},
-todos compitiendo por la misma cantidad reducida de CPUs lógicas (podés usar
-\texttt{taskset} para limitarlos a una o dos CPUs).
+Usá un límite blando de CPU igual al argumento y un límite duro un segundo
+mayor. Así un proceso que no maneje \texttt{SIGXCPU} permite observar la señal
+antes de alcanzar el límite duro. Compilá y probá:
 
 \begin{lstlisting}[language=bash]
-$ taskset -c 0 nice -n 19 ./carga & p1=$!
-$ taskset -c 0 nice -n 19 ./carga & p2=$!
-$ taskset -c 0 nice -n 19 ./carga & p3=$!
-$ taskset -c 0 nice -n -5 ./carga & p4=$!
-$ ps -o pid,ni,pri,pcpu,comm -p "$p1,$p2,$p3,$p4"
-$ watch -n 1 'ps -o pid,ni,pri,pcpu,comm -p "'"$p1,$p2,$p3,$p4"'"'
+$ gcc -Wall -Wextra -O0 -g runlimit.c -o runlimit
+$ ./runlimit 1 5 -- sh -c 'while :; do :; done'
+$ ./runlimit 5 1 -- sleep 5
+$ ./runlimit 5 1 -- sh -c 'sleep 10 & wait'
 \end{lstlisting}
 
-Registrá el \texttt{\%CPU} de cada proceso a lo largo de al menos un minuto.
-Contestá: ¿alguno de los procesos con \texttt{nice 19} llegó a \texttt{\%CPU}
-cercano a cero de forma sostenida, o todos recibieron algo de tiempo aunque
-fuera poco? Investigá por qué \texttt{SCHED\_OTHER} en Linux está diseñado
-para evitar la inanición total incluso con niceness muy dispar, a diferencia
-de lo que podría ocurrir con una prioridad estática mal configurada en una
-política de tiempo real.
+El loop CPU-bound debería alcanzar el límite de CPU antes del límite de pared
+y terminar por \texttt{SIGXCPU}. \texttt{sleep} debería consumir casi nada de
+CPU pero alcanzar el límite de pared. El último caso comprueba que el
+descendiente no queda ejecutándose cuando termina el shell padre. También
+probá un comando corto que termine correctamente y verificá que el ejecutor
+devuelve su código de salida.
 
-\begin{extrabox}
-Repetí el experimento reemplazando al proceso de \texttt{nice -5} por uno
-\texttt{SCHED\_FIFO} de baja prioridad de tiempo real (por ejemplo,
-\texttt{chrt -f 1}) y compará: ¿ahora sí lográs que los procesos
-\texttt{SCHED\_OTHER} queden sin CPU? Explicá la diferencia de garantías
-entre ambas políticas.
-\end{extrabox}
+Registrá el estado final, las señales, los dos tiempos de CPU y el tiempo
+transcurrido. No uses comandos sin límite ni pruebes sobre procesos ajenos.
+
+Algunas preguntas interesantes para considerar:
+
+\begin{itemize}[leftmargin=*]
+  \item Por qué el comando que duerme puede superar el tiempo de CPU sin
+  superar el tiempo de pared?
+  \item Qué diferencia hay entre \texttt{RLIMIT\_CPU} y \texttt{cpu.max} de
+  un cgroup?
+  \item Por qué el padre debe controlar un grupo de procesos y no sólo el PID
+  del hijo directo?
+  \item Qué información aportan \texttt{WIFEXITED} y
+  \texttt{WIFSIGNALED}?
+  \item Cómo se usa \texttt{WTERMSIG} junto con
+  \texttt{getrusage()}?
+  \item Qué limitación tiene medir el uso de CPU sólo con el proceso padre de
+  un shell que creó descendientes?
+\end{itemize}
+
+Consultá \texttt{man 2 getrlimit}, \texttt{man 2 wait4} y
+\texttt{man 2 setpgid}; completá con \texttt{man 7 signal}.
 
 \end{document}

@@ -3,8 +3,8 @@ TYPST_IMAGE ?= ghcr.io/typst/typst:latest
 TEST_IMAGE ?= os-practicos-tests
 UBUNTU_IMAGE ?= ubuntu:latest
 FONTS_DIR ?= fonts
-TEX_FILES ?= TP1/Practico1.tex TP1/Practico1-extra.tex TP2/Practico2.tex TP2/Practico2-extra.tex TP3/Practico3.tex TP3/Practico3-extra.tex TP4/Practico4.tex
-TYPST_FILES ?= TP1-typst/Practico1t.typ TP1-typst/Practico1t-extra.typ TP2-typst/Practico2t.typ TP2-typst/Practico2t-extra.typ TP3-typst/Practico3t.typ TP3-typst/Practico3t-extra.typ TP4-typst/Practico4t.typ
+TEX_FILES ?= TP1/Practico1.tex TP1/Practico1-extra.tex TP2/Practico2.tex TP2/Practico2-extra.tex TP3/Practico3.tex TP3/Practico3-extra.tex TP4/Practico4.tex TP4/Practico4-extra.tex
+TYPST_FILES ?= TP1-typst/Practico1t.typ TP1-typst/Practico1t-extra.typ TP2-typst/Practico2t.typ TP2-typst/Practico2t-extra.typ TP3-typst/Practico3t.typ TP3-typst/Practico3t-extra.typ TP4-typst/Practico4t.typ TP4-typst/Practico4t-extra.typ
 WATCH_DIRS := $(sort $(dir $(TEX_FILES) $(TYPST_FILES) TP1/Captura\ desde\ 2026-08-03\ 19-11-55.png) $(FONTS_DIR)/ examples/)
 
 .PHONY: all pdf typst test test-latest clean watch

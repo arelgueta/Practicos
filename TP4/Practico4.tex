@@ -176,7 +176,7 @@ involuntarios:
 
 \begin{lstlisting}[language=bash]
 $ pid=$$
-$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \\
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \
     /proc/$pid/status
 voluntary_ctxt_switches:        4
 nonvoluntary_ctxt_switches:     0
@@ -300,9 +300,9 @@ segundos y luego consultá sus métricas:
 
 \begin{lstlisting}[language=bash]
 $ ps -o pid,ppid,ni,pri,rtprio,stat,pcpu,comm -p "$pid1,$pid2"
-$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \\
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \
     /proc/$pid1/status
-$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \\
+$ grep -E 'voluntary_ctxt_switches|nonvoluntary_ctxt_switches' \
     /proc/$pid2/status
 \end{lstlisting}
 

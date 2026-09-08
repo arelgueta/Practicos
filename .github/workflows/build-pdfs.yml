@@ -33,6 +33,7 @@ jobs:
       tex_tp3_extra: ${{ steps.filter.outputs.tex_tp3_extra }}
       tex_tp4: ${{ steps.filter.outputs.tex_tp4 }}
       tex_tp4_extra: ${{ steps.filter.outputs.tex_tp4_extra }}
+      tex_tp5: ${{ steps.filter.outputs.tex_tp5 }}
       typst_main: ${{ steps.filter.outputs.typst_main }}
       typst_extra: ${{ steps.filter.outputs.typst_extra }}
       typst_tp2: ${{ steps.filter.outputs.typst_tp2 }}
@@ -41,6 +42,7 @@ jobs:
       typst_tp3_extra: ${{ steps.filter.outputs.typst_tp3_extra }}
       typst_tp4: ${{ steps.filter.outputs.typst_tp4 }}
       typst_tp4_extra: ${{ steps.filter.outputs.typst_tp4_extra }}
+      typst_tp5: ${{ steps.filter.outputs.typst_tp5 }}
       manual: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
@@ -76,6 +78,9 @@ jobs:
               - 'TP4/Practico4.tex'
             tex_tp4_extra:
               - 'TP4/Practico4-extra.tex'
+            tex_tp5:
+              - 'TP5/Practico5.tex'
+              - 'examples/tp5/**'
             typst_main:
               - 'TP1-typst/Practico1t.typ'
               - 'TP1/*.png'
@@ -106,6 +111,10 @@ jobs:
               - 'fonts/**'
             typst_tp4_extra:
               - 'TP4-typst/Practico4t-extra.typ'
+              - 'fonts/**'
+            typst_tp5:
+              - 'TP5-typst/Practico5t.typ'
+              - 'examples/tp5/**'
               - 'fonts/**'
 
   build:
@@ -165,6 +174,12 @@ jobs:
             tp: 4
             variant: ' extra'
             filter: tex_tp4_extra
+          - tex_file: TP5/Practico5.tex
+            pdf_file: TP5/Practico5.pdf
+            artifact_name: tp5-latex
+            tp: 5
+            variant: ''
+            filter: tex_tp5
 
     steps:
       - name: Check out repository
@@ -242,6 +257,12 @@ jobs:
             tp: 4
             variant: ' extra'
             filter: typst_tp4_extra
+          - typ_file: TP5-typst/Practico5t.typ
+            pdf_file: TP5-typst/Practico5t.pdf
+            artifact_name: tp5-typst
+            tp: 5
+            variant: ''
+            filter: typst_tp5
 
     steps:
       - name: Check out repository
@@ -284,6 +305,7 @@ jobs:
        needs.changes.outputs.tex_tp3_extra == 'true' ||
        needs.changes.outputs.tex_tp4 == 'true' ||
        needs.changes.outputs.tex_tp4_extra == 'true' ||
+       needs.changes.outputs.tex_tp5 == 'true' ||
        needs.changes.outputs.typst_main == 'true' ||
        needs.changes.outputs.typst_extra == 'true' ||
        needs.changes.outputs.typst_tp2 == 'true' ||
@@ -291,7 +313,8 @@ jobs:
        needs.changes.outputs.typst_tp3 == 'true' ||
        needs.changes.outputs.typst_tp3_extra == 'true' ||
        needs.changes.outputs.typst_tp4 == 'true' ||
-       needs.changes.outputs.typst_tp4_extra == 'true')
+       needs.changes.outputs.typst_tp4_extra == 'true' ||
+       needs.changes.outputs.typst_tp5 == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write

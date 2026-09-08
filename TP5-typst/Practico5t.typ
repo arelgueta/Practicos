@@ -50,39 +50,41 @@ crítica es la parte que debe ejecutarse con acceso exclusivo. La operación
 "incrementar un contador" no tiene por qué ser indivisible: puede leer,
 modificar y escribir en pasos separados.
 
-La implementación de referencia en C está en
-`../examples/tp5/contador.c`. Si usás otro lenguaje, conservá la misma
-interfaz y comportamiento. El programa crea trabajadores que actualizan un
-contador y ofrece una versión sin protección y otra con un mutex (objeto de
-exclusión mutua, *mutual exclusion*):
+Copiá el siguiente listado en un archivo local llamado `contador.c`, o
+implementá la misma interfaz y comportamiento en otro lenguaje. El programa
+crea trabajadores que actualizan un contador y ofrece una versión sin
+protección y otra con un mutex (objeto de exclusión mutua, *mutual
+exclusion*):
 
 #raw(read("../examples/tp5/contador.c"), lang: "c")
 
-Compilá y probá la implementación de referencia:
+Compilá las dos variantes de la implementación de referencia:
 
 ```bash
-$ gcc -Wall -Wextra -O0 -g -pthread ../examples/tp5/contador.c -o contador
-$ ./contador --threads 4 --iterations 100000 --unsafe --yield
-$ ./contador --threads 4 --iterations 100000 --mutex --yield
+$ gcc -Wall -Wextra -O0 -g -pthread contador.c -o contador-inseguro
+$ ./contador-inseguro
+$ gcc -Wall -Wextra -O0 -g -pthread -DUSE_MUTEX contador.c -o contador
+$ ./contador
 ```
 
 El modo no protegido puede acertar ocasionalmente; eso no demuestra que sea
-correcto. Repetí cada prueba varias veces y registrá una tabla con cantidad de
-hilos, iteraciones, modo, valor esperado, valor observado y tiempo. Compará
-también una ejecución con y sin `--yield`.
+correcto. Repetí cada prueba varias veces y compará en la consola el modo, el
+valor esperado y el valor observado. Los valores de `THREADS` e `ITERATIONS`
+están definidos al comienzo del listado: cambialos para estudiar cómo afectan
+el resultado.
 
-Contestá:
+Considerá durante la ejecución:
 
-1. Qué intercalado permite que se pierda una actualización?
-2. Qué parte del programa es la sección crítica?
-3. Por qué el mutex corrige el resultado y qué costo observable agrega?
-4. La ejecución cumple exclusión mutua, progreso y espera limitada?
+1. qué intercalado permite que se pierda una actualización;
+2. qué parte del programa es la sección crítica;
+3. por qué el mutex corrige el resultado y qué costo observable agrega;
+4. si la ejecución cumple exclusión mutua, progreso y espera limitada.
 
 #extra[
-  Repetí el experimento acumulando primero un contador local en cada trabajador
-  y sumando esos resultados una sola vez al final. Explicá por qué reduce la
-  contención y por qué no es una solución general para cualquier estado
-  compartido.
+  Si querés profundizar, repetí el experimento acumulando primero un contador
+  local en cada trabajador y sumando esos resultados una sola vez al final.
+  Considerá por qué reduce la contención y por qué no es una solución general
+  para cualquier estado compartido.
 ]
 
 = Variables de condición y productor-consumidor
@@ -93,54 +95,53 @@ Una variable de condición permite dormir el hilo hasta que cambie el estado
 relevante. Siempre se usa junto con un mutex y una condición `while`; la
 variable de condición no protege los datos por sí sola.
 
-La implementación de referencia en C está en
-`../examples/tp5/buffer.c`. Cada productor agrega una cantidad finita de
-elementos y cada consumidor los retira. El programa termina cuando todos los
-productores finalizaron y el buffer quedó vacío:
+Copiá el siguiente listado en un archivo local llamado `buffer.c`, o
+implementá la misma interfaz y comportamiento en otro lenguaje. Un productor
+agrega una cantidad finita de elementos y un consumidor los retira. El programa
+termina cuando el productor finalizó y el buffer quedó vacío:
 
 #raw(read("../examples/tp5/buffer.c"), lang: "c")
 
-Compilá y ejecutá con distintas capacidades:
+Compilá y ejecutá:
 
 ```bash
-$ gcc -Wall -Wextra -O0 -g -pthread ../examples/tp5/buffer.c -o buffer
-$ ./buffer --producers 2 --consumers 2 --items 1000 --capacity 4
-$ ./buffer --producers 3 --consumers 1 --items 1000 --capacity 32
+$ gcc -Wall -Wextra -O0 -g -pthread buffer.c -o buffer
+$ ./buffer
 ```
 
-Verificá que la cantidad consumida, la suma de secuencias y los elementos
-restantes coincidan con lo esperado. Explicá qué ocurre si se reemplaza
-`while` por `if`, o si se consulta el estado del buffer sin tomar el mutex.
+Observá que se consuman todos los elementos. Cambiá `CAPACITY` e `ITEMS`,
+recompilá y repetí. Considerá qué ocurre si se reemplaza `while` por `if`, o si
+se consulta el estado del buffer sin tomar el mutex.
 
-Relacioná este programa con el problema clásico del productor-consumidor y con
-la idea de monitor: un estado privado al que se accede mediante operaciones que
-mantienen la exclusión mutua. Compará la espera bloqueante con un loop que
-consulta continuamente si hay espacio o elementos.
+Considerá la relación del programa con productor-consumidor y con la idea de
+monitor: un estado privado al que se accede mediante operaciones que mantienen
+la exclusión mutua. Compará la espera bloqueante con un loop que consulta
+continuamente si hay espacio o elementos.
 
 = Tuberías, descriptores y fin de archivo
 
 Una tubería anónima es un canal unidireccional que el núcleo mantiene para que
 un proceso escriba y otro lea. El lanzador del siguiente ejemplo recrea una
-parte de lo que hace el shell con el operador `|`: crea dos hijos, conecta sus
-descriptores estándar y espera a ambos.
+parte de lo que hacen los shells al usar el operador `|`: crea dos hijos,
+conecta sus descriptores estándar y espera a ambos.
 
-La implementación de referencia en C está en
-`../examples/tp5/pipeline.c`:
+Copiá el siguiente listado en un archivo local llamado `pipeline.c`, o
+implementá la misma interfaz y comportamiento en otro lenguaje:
 
 #raw(read("../examples/tp5/pipeline.c"), lang: "c")
 
-Compilá y compará las dos formas de ejecutar el mismo flujo:
+Compilá y compará la salida con la que produce el shell:
 
 ```bash
-$ gcc -Wall -Wextra -O0 -g ../examples/tp5/pipeline.c -o pipeline
+$ gcc -Wall -Wextra -O0 -g pipeline.c -o pipeline
 $ printf 'uno\ndos\ntres\n' | wc -l
-$ ./pipeline printf 'uno\ndos\ntres\n' -- wc -l
+$ ./pipeline
 ```
 
-Identificá el papel de `pipe`, `fork`, `dup2`, `execvp` y `waitpid`. Explicá
-por qué cada proceso debe cerrar los extremos que no usa. En particular, el
-lector puede quedar bloqueado si algún proceso conserva abierto un descriptor
-de escritura, aun cuando ya no vaya a escribir.
+Considerá el papel de `pipe`, `fork`, `dup2`, `execlp` y `waitpid`, y por qué
+cada proceso debe cerrar los extremos que no usa. En particular, el lector
+puede quedar bloqueado si algún proceso conserva abierto un descriptor de
+escritura, aun cuando ya no vaya a escribir.
 
 #info[
   Los descriptores 0, 1 y 2 son, respectivamente, entrada estándar, salida
@@ -178,8 +179,8 @@ valor; la operación positiva lo incrementa y puede despertar a otro proceso.
 Ambas operaciones son indivisibles para el conjunto administrado por el
 núcleo.
 
-La implementación de referencia en C está en
-`../examples/tp5/sem-sync.c`:
+Copiá el siguiente listado en un archivo local llamado `sem-sync.c`, o
+implementá la misma interfaz y comportamiento en otro lenguaje:
 
 #raw(read("../examples/tp5/sem-sync.c"), lang: "c")
 
@@ -196,24 +197,23 @@ semctl(semid, 0, IPC_RMID);
 Compilá y ejecutá:
 
 ```bash
-$ gcc -Wall -Wextra -O0 -g ../examples/tp5/sem-sync.c -o sem-sync
-$ ./sem-sync --workers 3 --hold-ms 200
-$ ipcs -s
+$ gcc -Wall -Wextra -O0 -g sem-sync.c -o sem-sync
+$ ./sem-sync
 ```
 
 El programa informa el identificador del conjunto y muestra qué proceso
-adquirió el semáforo. Consultá `ipcs -s` mientras el programa está activo y
-verificá que al finalizar imprime que eliminó el identificador. Los IDs y el
-orden de los procesos cambian en cada ejecución.
+adquirió el semáforo. Consultá `ipcs -s` desde otra terminal mientras el
+programa está activo y observá que al finalizar imprime que eliminó el
+identificador. Los IDs y el orden de los procesos cambian en cada ejecución.
 
-Contestá:
+Considerá durante la ejecución:
 
-1. Por qué sólo un proceso imprime que está dentro de la sección crítica al
-   mismo tiempo?
-2. Qué ocurriría si el proceso terminara sin liberar el semáforo?
-3. Qué diferencia hay entre un semáforo binario y uno con un contador positivo
-   mayor que uno?
-4. Qué recurso queda en el sistema si se omite `IPC_RMID`?
+1. por qué sólo un proceso imprime que está dentro de la sección crítica al
+   mismo tiempo;
+2. qué ocurriría si el proceso terminara sin liberar el semáforo;
+3. qué diferencia hay entre un semáforo binario y uno con un contador positivo
+   mayor que uno;
+4. qué recurso queda en el sistema si se omite `IPC_RMID`.
 
 #note[
   `IPC_PRIVATE` no significa que el recurso desaparezca al terminar el proceso
@@ -230,32 +230,33 @@ escriba el archivo. `lockf` permite bloquear una región respecto de la posició
 actual del descriptor; en Linux se relaciona con los bloqueos de registros de
 `fcntl`.
 
-La implementación de referencia en C crea varios procesos que realizan una
-operación de lectura-modificación-escritura sobre el mismo contador:
+Copiá el siguiente listado en un archivo local llamado `lock-counter.c`, o
+implementá la misma interfaz y comportamiento en otro lenguaje. El programa
+crea varios procesos que realizan una operación de lectura-modificación-
+escritura sobre el mismo contador:
 
 #raw(read("../examples/tp5/lock-counter.c"), lang: "c")
 
-Usá un archivo temporal y compará ambos modos:
+Compará ambos modos:
 
 ```bash
-$ gcc -Wall -Wextra -O0 -g ../examples/tp5/lock-counter.c -o lock-counter
-$ work=$(mktemp -d)
-$ ./lock-counter --file "$work/counter" --workers 3 --rounds 100 --unsafe
-$ ./lock-counter --file "$work/counter" --workers 3 --rounds 100 --lock
+$ gcc -Wall -Wextra -O0 -g lock-counter.c -o lock-counter-inseguro
+$ ./lock-counter-inseguro
+$ gcc -Wall -Wextra -O0 -g -DUSE_LOCK lock-counter.c -o lock-counter
+$ ./lock-counter
 ```
 
-El valor esperado es `workers * rounds`. Repetí con más rondas y, mientras una
-ejecución con `--lock` está activa, observá `/proc/locks` desde otra terminal:
+El valor esperado es `WORKERS * ROUNDS`. Repetí con más rondas cambiando la
+constante `ROUNDS` del listado y, mientras una ejecución con `USE_LOCK` está
+activa, observá `/proc/locks` desde otra terminal:
 
 ```bash
 $ cat /proc/locks
-$ wait
-$ rm -rf "$work"
 ```
 
-Registrá el valor final, el tipo de bloqueo, el PID y la región observada.
-Explicá por qué la versión sin bloqueo puede perder actualizaciones y por qué
-un proceso que no llama a `lockf` puede ignorar el bloqueo asesorado.
+Observá el valor final, el tipo de bloqueo, el PID y la región observada.
+Considerá por qué la versión sin bloqueo puede perder actualizaciones y por
+qué un proceso que no llama a `lockf` puede ignorar el bloqueo asesorado.
 
 = Interbloqueo: provocar, diagnosticar y evitar
 
@@ -265,36 +266,37 @@ ejemplo, dos hilos adquieren dos mutexes en órdenes opuestos.
 
 #raw(read("../examples/tp5/deadlock.c"), lang: "c")
 
-Compilá y ejecutá primero la versión que impone un orden global:
+Compilá y ejecutá primero la versión que puede quedar bloqueada:
 
 ```bash
-$ gcc -Wall -Wextra -O0 -g -pthread ../examples/tp5/deadlock.c -o deadlock
-$ ./deadlock --ordered
+$ gcc -Wall -Wextra -O0 -g -pthread deadlock.c -o deadlock
+$ timeout 3 ./deadlock
 ```
 
-Después ejecutá el caso intencionalmente bloqueado con un límite:
+Después recompilá imponiendo un orden global y ejecutá la versión segura:
 
 ```bash
-$ timeout 3 ./deadlock --deadlock
+$ gcc -Wall -Wextra -O0 -g -pthread -DSAFE_ORDER deadlock.c -o deadlock-safe
+$ ./deadlock-safe
 ```
 
 La salida debe mostrar que cada hilo tomó un recurso y espera el otro. El
 comando `timeout` evita dejar la terminal bloqueada; no ejecutes el programa
 sobre procesos del sistema.
 
-Identificá las cuatro condiciones de Coffman:
+Considerá las cuatro condiciones de Coffman:
 
 - exclusión mutua;
 - retención y espera;
 - no expropiación;
 - espera circular.
 
-Explicá por qué el orden global rompe la espera circular. Diferenciá
-interbloqueo, inanición y espera activa, y describí qué cambiaría si el
-programa usara `pthread_mutex_trylock` para retirarse y reintentar.
+Considerá por qué el orden global rompe la espera circular, la diferencia entre
+interbloqueo, inanición y espera activa, y qué cambiaría si el programa usara
+`pthread_mutex_trylock` para retirarse y reintentar.
 
 #extra[
-  Dibujá el grafo de espera de la ejecución bloqueada: cada hilo es un nodo y
-  cada flecha indica el recurso que espera. Agregá la adquisición del primer
-  recurso y verificá dónde aparece el ciclo.
+  Si querés profundizar, considerá el grafo de espera de la ejecución
+  bloqueada: cada hilo es un nodo y cada flecha indica el recurso que espera.
+  Incluí la adquisición del primer recurso y observá dónde aparece el ciclo.
 ]

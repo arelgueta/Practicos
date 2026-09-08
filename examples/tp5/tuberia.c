@@ -18,6 +18,8 @@ int main(void)
     productor = fork();
     if (productor == -1) {
         perror("fork");
+        close(fd[0]);
+        close(fd[1]);
         return EXIT_FAILURE;
     }
     if (productor == 0) {
@@ -35,6 +37,9 @@ int main(void)
     consumidor = fork();
     if (consumidor == -1) {
         perror("fork");
+        close(fd[0]);
+        close(fd[1]);
+        waitpid(productor, NULL, 0);
         return EXIT_FAILURE;
     }
     if (consumidor == 0) {

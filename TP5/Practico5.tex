@@ -84,9 +84,9 @@ SISTEMAS OPERATIVOS
 En este TP vas a estudiar cómo cooperan los procesos cuando deben
 comunicarse o coordinar el acceso a un recurso compartido. Vamos a usar
 llamadas POSIX (\emph{Portable Operating System Interface}) para construir una
-tubería, candados de archivos y semáforos de System V. En todos los casos,
-observá primero qué hace el núcleo y después relacioná el resultado con los
-descriptores, los procesos y sus estados.
+tubería y candados de archivos, y la interfaz de IPC de System V para los
+semáforos. En todos los casos, observá primero qué hace el núcleo y después
+relacioná el resultado con los descriptores, los procesos y sus estados.
 
 \section{Comunicación entre procesos con tuberías}
 
@@ -142,9 +142,11 @@ el pipe. El proceso original cierra sus copias de ambos extremos y espera a
 los dos hijos.
 
 \clearpage
+\enlargethispage{3pt}
 \inputcode[language=C,basicstyle=\ttfamily\scriptsize]{../examples/tp5/tuberia.c}
 
-Compilá y ejecutá el programa. La salida puede variar según los archivos del
+Copiá el listado anterior en un archivo llamado \texttt{tuberia.c}. Luego
+compilá y ejecutá el programa. La salida puede variar según los archivos del
 directorio actual:
 
 \begin{lstlisting}[language=bash]
@@ -205,7 +207,7 @@ $ printf 'mensaje enviado por una FIFO\n' > canal
 \end{lstlisting}
 
 La entrada \texttt{canal} permanece en el directorio aunque los procesos hayan
-terminado. Eliminála cuando finalices la prueba:
+terminado. Eliminá la FIFO cuando finalices la prueba:
 
 \begin{lstlisting}[language=bash]
 $ rm canal
@@ -259,7 +261,8 @@ llamada a \texttt{ftruncate()} deja preparada la región, y
 
 \inputcode[language=C,basicstyle=\ttfamily\footnotesize]{../examples/tp5/candado.c}
 
-Compilalo y ejecutá primero una sola copia:
+Copiá el listado anterior en un archivo llamado \texttt{candado.c}. Compilá el
+archivo y ejecutá primero una sola copia:
 
 \begin{lstlisting}[language=bash]
 $ gcc -Wall -Wextra -std=c11 -o candado candado.c
@@ -369,16 +372,16 @@ existente para que puedas inspeccionarlo y eliminarlo en el paso siguiente.
 
 \inputcode[language=C,basicstyle=\ttfamily\footnotesize]{../examples/tp5/creasem.c}
 
-Compilá y compará la lista de semáforos antes y después de ejecutar:
+Copiá el listado anterior en un archivo llamado \texttt{creasem.c}. Compilá el
+archivo y compará la lista de semáforos antes y después de ejecutar:
 
 \begin{lstlisting}[language=bash]
 $ gcc -Wall -Wextra -std=c11 -o creasem creasem.c
-$ gcc -Wall -Wextra -std=c11 -o cntrlsem cntrlsem.c
 $ ipcs -s
 $ ./creasem
-Semaforo creado: 98307
-Su valor inicial es 1 (recurso disponible).
-Eliminalo con: ./cntrlsem 98307
+Conjunto creado: 98307
+Valor inicial: 1 (recurso disponible).
+Eliminar con: ./cntrlsem 98307
 $ ipcs -s
 \end{lstlisting}
 
@@ -417,14 +420,21 @@ necesarios para consultar o modificar el conjunto.
 
 El programa de control usa \texttt{IPC\_RMID}:
 
-\inputcode[language=C,basicstyle=\ttfamily\footnotesize]{../examples/tp5/cntrlsem.c}
+\inputcode[language=C,basicstyle=\ttfamily\scriptsize]{../examples/tp5/cntrlsem.c}
 
-Pasale el identificador que imprimió \texttt{creasem} y verificá que ya no
+Copiá el listado anterior en un archivo llamado \texttt{cntrlsem.c} y compilá el
+archivo:
+
+\begin{lstlisting}[language=bash]
+$ gcc -Wall -Wextra -std=c11 -o cntrlsem cntrlsem.c
+\end{lstlisting}
+
+Pasá el identificador que imprimió \texttt{creasem} y verificá que ya no
 aparezca en \texttt{ipcs -s}:
 
 \begin{lstlisting}[language=bash]
 $ ./cntrlsem 98307
-Semaforo eliminado.
+Conjunto eliminado.
 $ ipcs -s
 \end{lstlisting}
 

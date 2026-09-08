@@ -37,10 +37,10 @@
 
 En este TP vas a estudiar cómo cooperan los procesos cuando deben comunicarse
 o coordinar el acceso a un recurso compartido. Vamos a usar llamadas POSIX
-(Portable Operating System Interface) para construir una tubería, candados de
-archivos y semáforos de System V. En todos los casos, observá primero qué hace
-el núcleo y después relacioná el resultado con los descriptores, los procesos y
-sus estados.
+(Portable Operating System Interface) para construir una tubería y candados de
+archivos, y la interfaz de IPC de System V para los semáforos. En todos los
+casos, observá primero qué hace el núcleo y después relacioná el resultado con
+los descriptores, los procesos y sus estados.
 
 = Comunicación entre procesos con tuberías
 
@@ -96,8 +96,9 @@ proceso original cierra sus copias de ambos extremos y espera a los dos hijos.
 
 #raw(read("../examples/tp5/tuberia.c"), lang: "c", block: true)
 
-Compilá y ejecutá el programa. La salida puede variar según los archivos del
-directorio actual:
+Copiá el listado anterior en un archivo llamado tuberia.c. Luego compilá y
+ejecutá el programa. La salida puede variar según los archivos del directorio
+actual:
 
 ```bash
 $ gcc -Wall -Wextra -std=c11 -o tuberia tuberia.c
@@ -153,7 +154,7 @@ $ printf 'mensaje enviado por una FIFO\n' > canal
 ```
 
 La entrada `canal` permanece en el directorio aunque los procesos hayan
-terminado. Eliminála cuando finalices la prueba:
+terminado. Eliminá la FIFO cuando finalices la prueba:
 
 ```bash
 $ rm canal
@@ -205,7 +206,8 @@ posición al comienzo antes de llamar a `lockf()`.
 
 #raw(read("../examples/tp5/candado.c"), lang: "c", block: true)
 
-Compilalo y ejecutá primero una sola copia:
+Copiá el listado anterior en un archivo llamado candado.c. Compilá el archivo y
+ejecutá primero una sola copia:
 
 ```bash
 $ gcc -Wall -Wextra -std=c11 -o candado candado.c
@@ -308,16 +310,16 @@ inspeccionarlo y eliminarlo en el paso siguiente.
 
 #raw(read("../examples/tp5/creasem.c"), lang: "c", block: true)
 
-Compilá y compará la lista de semáforos antes y después de ejecutar:
+Copiá el listado anterior en un archivo llamado creasem.c. Compilá el archivo.
+Compará la lista de semáforos antes y después de ejecutar:
 
 ```bash
 $ gcc -Wall -Wextra -std=c11 -o creasem creasem.c
-$ gcc -Wall -Wextra -std=c11 -o cntrlsem cntrlsem.c
 $ ipcs -s
 $ ./creasem
-Semaforo creado: 98307
-Su valor inicial es 1 (recurso disponible).
-Eliminalo con: ./cntrlsem 98307
+Conjunto creado: 98307
+Valor inicial: 1 (recurso disponible).
+Eliminar con: ./cntrlsem 98307
 $ ipcs -s
 ```
 
@@ -357,12 +359,18 @@ El programa de control usa `IPC_RMID`:
 
 #raw(read("../examples/tp5/cntrlsem.c"), lang: "c", block: true)
 
-Pasale el identificador que imprimió `creasem` y verificá que ya no aparezca
+Copiá el listado anterior en un archivo llamado cntrlsem.c y compilá el archivo:
+
+```bash
+$ gcc -Wall -Wextra -std=c11 -o cntrlsem cntrlsem.c
+```
+
+Pasá el identificador que imprimió `creasem` y verificá que ya no aparezca
 en `ipcs -s`:
 
 ```bash
 $ ./cntrlsem 98307
-Semaforo eliminado.
+Conjunto eliminado.
 $ ipcs -s
 ```
 

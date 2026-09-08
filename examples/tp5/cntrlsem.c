@@ -17,7 +17,8 @@ int main(int argc, char *argv[])
 
     errno = 0;
     valor = strtol(argv[1], &final, 10);
-    if (errno != 0 || *final != '\0' || valor < 0 || valor > INT_MAX) {
+    if (errno != 0 || final == argv[1] || *final != '\0' || valor < 0 ||
+        valor > INT_MAX) {
         fprintf(stderr, "SEMID invalido: %s\n", argv[1]);
         return EXIT_FAILURE;
     }
@@ -26,6 +27,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    puts("Semaforo eliminado.");
+    puts("Conjunto eliminado.");
     return EXIT_SUCCESS;
 }

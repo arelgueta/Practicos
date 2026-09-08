@@ -37,12 +37,12 @@ int main(int argc, char *argv[])
     printf("Proceso %ld: candado colocado\n", (long)getpid());
     fflush(stdout);
     sleep(5);
-    printf("Proceso %ld: candado eliminado\n", (long)getpid());
     if (lockf(fd, F_ULOCK, 100) == -1) {
         perror("lockf");
         close(fd);
         return EXIT_FAILURE;
     }
+    printf("Proceso %ld: candado eliminado\n", (long)getpid());
 
     close(fd);
     return EXIT_SUCCESS;

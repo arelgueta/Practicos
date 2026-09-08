@@ -22,8 +22,8 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-    printf("Semaforo creado: %d\n", semid);
-    printf("Su valor inicial es 1 (recurso disponible).\n");
-    printf("Eliminalo con: ./cntrlsem %d\n", semid);
+    printf("Conjunto creado: %d\n", semid);
+    printf("Valor inicial: 1 (recurso disponible).\n");
+    printf("Eliminar con: ./cntrlsem %d\n", semid);
     return EXIT_SUCCESS;
 }

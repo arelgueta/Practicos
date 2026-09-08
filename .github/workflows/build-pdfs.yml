@@ -34,6 +34,7 @@ jobs:
       tex_tp4: ${{ steps.filter.outputs.tex_tp4 }}
       tex_tp4_extra: ${{ steps.filter.outputs.tex_tp4_extra }}
       tex_tp5: ${{ steps.filter.outputs.tex_tp5 }}
+      tex_tp5_extra: ${{ steps.filter.outputs.tex_tp5_extra }}
       typst_main: ${{ steps.filter.outputs.typst_main }}
       typst_extra: ${{ steps.filter.outputs.typst_extra }}
       typst_tp2: ${{ steps.filter.outputs.typst_tp2 }}
@@ -43,6 +44,7 @@ jobs:
       typst_tp4: ${{ steps.filter.outputs.typst_tp4 }}
       typst_tp4_extra: ${{ steps.filter.outputs.typst_tp4_extra }}
       typst_tp5: ${{ steps.filter.outputs.typst_tp5 }}
+      typst_tp5_extra: ${{ steps.filter.outputs.typst_tp5_extra }}
       manual: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
@@ -81,6 +83,8 @@ jobs:
             tex_tp5:
               - 'TP5/Practico5.tex'
               - 'examples/tp5/**'
+            tex_tp5_extra:
+              - 'TP5/Practico5-extra.tex'
             typst_main:
               - 'TP1-typst/Practico1t.typ'
               - 'TP1/*.png'
@@ -115,6 +119,9 @@ jobs:
             typst_tp5:
               - 'TP5-typst/Practico5t.typ'
               - 'examples/tp5/**'
+              - 'fonts/**'
+            typst_tp5_extra:
+              - 'TP5-typst/Practico5t-extra.typ'
               - 'fonts/**'
 
   build:
@@ -180,6 +187,12 @@ jobs:
             tp: 5
             variant: ''
             filter: tex_tp5
+          - tex_file: TP5/Practico5-extra.tex
+            pdf_file: TP5/Practico5-extra.pdf
+            artifact_name: tp5-latex-extra
+            tp: 5
+            variant: ' extra'
+            filter: tex_tp5_extra
 
     steps:
       - name: Check out repository
@@ -263,6 +276,12 @@ jobs:
             tp: 5
             variant: ''
             filter: typst_tp5
+          - typ_file: TP5-typst/Practico5t-extra.typ
+            pdf_file: TP5-typst/Practico5t-extra.pdf
+            artifact_name: tp5-typst-extra
+            tp: 5
+            variant: ' extra'
+            filter: typst_tp5_extra
 
     steps:
       - name: Check out repository
@@ -306,6 +325,7 @@ jobs:
        needs.changes.outputs.tex_tp4 == 'true' ||
        needs.changes.outputs.tex_tp4_extra == 'true' ||
        needs.changes.outputs.tex_tp5 == 'true' ||
+       needs.changes.outputs.tex_tp5_extra == 'true' ||
        needs.changes.outputs.typst_main == 'true' ||
        needs.changes.outputs.typst_extra == 'true' ||
        needs.changes.outputs.typst_tp2 == 'true' ||
@@ -314,7 +334,8 @@ jobs:
        needs.changes.outputs.typst_tp3_extra == 'true' ||
        needs.changes.outputs.typst_tp4 == 'true' ||
        needs.changes.outputs.typst_tp4_extra == 'true' ||
-       needs.changes.outputs.typst_tp5 == 'true')
+       needs.changes.outputs.typst_tp5 == 'true' ||
+       needs.changes.outputs.typst_tp5_extra == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write

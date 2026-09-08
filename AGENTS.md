@@ -28,6 +28,14 @@ main term and use the English parenthetical to disambiguate the concept.
 In Spanish questions and exclamations, use only the closing question and
 exclamation symbols; omit the corresponding opening symbols.
 
+## Regular TP activities
+
+Keep regular TP activities focused on guiding live experimentation and
+understanding. Do not add hand-in artifacts such as comparison tables,
+observation logs, or closing reports unless the task explicitly requests a
+submission; reserve submission-oriented work for explicitly defined extra or
+bonus tasks.
+
 ## Source files and included examples
 
 Keep complete source files outside the reports under `examples/`;

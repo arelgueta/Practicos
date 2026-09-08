@@ -1,0 +1,208 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\headheight}{30pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{%
+  \fontsize{8}{9.6}\selectfont
+  Licenciatura en Ciencias de la Computación\\
+  Sistemas Operativos\\[2pt]
+  \rule{4.2cm}{0.5pt}
+}
+\fancyfoot[C]{\thepage\ / \pageref{LastPage}}
+
+\newtcolorbox{trackbox}[1]{
+  colback=green!7!white, colframe=green!45!black,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=TRACK -- #1, fonttitle=\bfseries, coltitle=green!35!black,
+  colbacktitle=green!7!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{bonusbox}{
+  colback=red!7!white, colframe=red!55!black,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=BONUS -- POR PUNTOS, fonttitle=\bfseries, coltitle=red!55!black,
+  colbacktitle=red!7!white, boxsep=1pt, breakable
+}
+
+\newtcolorbox{extrabox}{
+  colback=orange!8!white, colframe=orange!55!white,
+  arc=2mm, boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  title=EXTRA, fonttitle=\bfseries, coltitle=orange!55!black,
+  colbacktitle=orange!8!white, boxsep=1pt, breakable
+}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{black!5}, rulecolor=\color{black!25},
+  frame=single, framerule=0.5pt, basicstyle=\ttfamily\small,
+  breaklines=true, showstringspaces=false, tabsize=4,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!70!black},
+  columns=fullflexible, upquote=true
+}
+\lstset{style=codestyle}
+\setlist{nosep}
+
+\title{Trabajo Práctico 5 -- Ejercicios extra}
+\author{}
+\date{}
+
+\begin{document}
+\renewcommand{\contentsname}{Tracks}
+\maketitle
+\thispagestyle{fancy}
+\begin{center}
+SISTEMAS OPERATIVOS
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Límite de instancias con un semáforo (7/10)}
+
+\begin{trackbox}{7/10}
+\textbf{Descripción:} limitar la cantidad de instancias concurrentes de un
+programa usando un semáforo contador de System V.
+\end{trackbox}
+
+Implementá un programa que limite la cantidad de instancias concurrentes usando
+un semáforo de System V. Interfaz sugerida:
+
+\begin{lstlisting}[language=bash]
+instance-limit SEM_KEY MAX_INSTANCES -- COMMAND [ARGS...]
+\end{lstlisting}
+
+Investigá la inicialización, la reserva y liberación de cupos, el
+comportamiento cuando se alcanza el límite y la limpieza del semáforo.
+
+\begin{bonusbox}
+Extendé el programa para que pueda detectar una instancia abandonada y
+recuperar su cupo sin afectar otros procesos. Documentá qué garantías ofrece
+\texttt{SEM\_UNDO} y cómo se comporta el programa frente a una terminación
+normal, \texttt{SIGTERM} y \texttt{SIGKILL}.
+\end{bonusbox}
+
+\section{Aproximación de $\pi$ y rendimiento}
+
+\begin{trackbox}{PI}
+\textbf{Descripción:} aproximar $\pi$ sumando términos de una expansión y
+medir el costo de aumentar la cantidad de términos.
+\end{trackbox}
+
+Implementá un programa secuencial que reciba $N$ y calcule:
+
+\[
+\pi_N = 4 \sum_{k=0}^{N-1} \frac{(-1)^k}{2k+1}.
+\]
+
+El error de esta aproximación cumple
+
+\[
+\left|\pi - \pi_N\right| < \frac{4}{2N+1}.
+\]
+
+Mostrá la aproximación, el error y el tiempo de ejecución. Probá distintos
+valores de $N$ y compará los resultados.
+
+\begin{bonusbox}
+Implementá una segunda versión del programa usando OpenMP. Debe calcular la
+misma aproximación de $\pi$, aceptar los mismos parámetros y producir
+resultados comparables con la versión secuencial. Compará la ejecución
+secuencial con distintas cantidades de hilos e informá el speedup. Se sugiere
+usar C o C++.
+\end{bonusbox}
+
+\section{Transferencia por pipes y SSH}
+
+\begin{trackbox}{SSH}
+\textbf{Descripción:} transferir y extraer un directorio remoto usando un
+pipe, sin crear un archivo intermedio.
+\end{trackbox}
+
+Investigá brevemente qué resuelven \texttt{scp} y \texttt{rsync}, y compará
+esas herramientas con una transferencia basada en un flujo de datos.
+
+Después, escribí una única línea de comandos que:
+
+\begin{itemize}
+  \item empaquete un directorio local y envíe el resultado por la salida
+  estándar;
+  \item use \texttt{ssh} para transportar ese flujo;
+  \item extraiga el flujo en un directorio de la máquina remota.
+\end{itemize}
+
+La solución debe usar pipes, \texttt{ssh} y \texttt{tar}. No uses
+\texttt{scp} ni \texttt{rsync} para resolverla, y no generes un archivo
+intermedio. Probá la línea con una máquina remota y verificá que la estructura
+y el contenido lleguen correctamente.
+
+\section{Cliente-servidor: solicitud y respuesta}
+
+\begin{trackbox}{IPC}
+\textbf{Descripción:} implementar una comunicación básica entre un proceso
+cliente y un proceso servidor.
+\end{trackbox}
+
+Implementá dos procesos:
+
+\begin{itemize}
+  \item el servidor espera una solicitud, la procesa y envía una respuesta;
+  \item el cliente envía la solicitud y muestra la respuesta recibida.
+\end{itemize}
+
+Elegí una operación sencilla, por ejemplo, solicitar al servidor que tire un
+dado o enviarle una cuenta aritmética para que devuelva el resultado. Definí
+un protocolo simple y asegurá al menos un intercambio completo de solicitud y
+respuesta mediante un mecanismo de comunicación entre procesos.
+
+\begin{bonusbox}
+Convertí la solución en un juego mínimo con dos procesos. El cliente debe
+mostrar un rectángulo grande usando secuencias de escape ANSI y un personaje
+dentro del área. Configurá la entrada del terminal sin modo canónico ni eco
+para leer las teclas \texttt{W}, \texttt{A}, \texttt{S} y \texttt{D}
+inmediatamente, y restaurá la configuración al salir.
+
+Cada tecla debe enviarse al servidor. El servidor debe validar y aplicar el
+movimiento, devolver el estado actualizado, incluyendo la posición del
+personaje, y mantener la autoridad exclusiva sobre el estado. El cliente debe
+renderizar en tiempo real únicamente el estado recibido.
+\end{bonusbox}
+
+\section{Heartbeat y watchdog}
+
+\begin{trackbox}{WATCHDOG}
+\textbf{Descripción:} detectar la ausencia de un proceso mediante mensajes
+periódicos de heartbeat.
+\end{trackbox}
+
+Implementá dos procesos:
+
+\begin{itemize}
+  \item un proceso de trabajo que envíe periódicamente un mensaje de heartbeat;
+  \item un watchdog que reciba esos mensajes y controle el tiempo transcurrido
+  desde el último heartbeat.
+\end{itemize}
+
+Si el watchdog no recibe un heartbeat dentro de un timeout configurable, debe
+informar que el proceso dejó de responder. Usá un mecanismo de comunicación
+entre procesos, definí el formato de los mensajes y asegurá el cierre correcto
+de los descriptores.
+
+Probá tanto el funcionamiento normal como la ausencia o terminación del
+proceso de trabajo.
+
+\end{document}

@@ -48,18 +48,16 @@ Investigá la inicialización, la reserva y liberación de cupos, el comportamie
 cuando se alcanza el límite y la limpieza del semáforo.
 
 #pagebreak()
-= Aproximación de pi y rendimiento (5/10)
+= Aproximación de $pi$ y rendimiento (5/10)
 
 #track("5/10", [
-  *Descripción:* aproximar pi sumando términos de una expansión y medir el
+  *Descripción:* aproximar $pi$ sumando términos de una expansión y medir el
   costo de aumentar la cantidad de términos.
 ])
 
 Implementá dos versiones de un programa que reciba `N` y calcule:
 
-```text
-pi_N = 4 * sum((-1)^k / (2*k + 1), k = 0 .. N-1)
-```
+$ pi_N = 4 sum_(k=0)^(N-1) frac((-1)^k, 2 k + 1) $
 
 Una versión debe ser secuencial. La otra debe repartir los términos entre
 varios trabajadores concurrentes, recibir una cantidad configurable de
@@ -67,9 +65,7 @@ trabajadores y combinar los resultados parciales.
 
 El error de esta aproximación cumple:
 
-```text
-|pi - pi_N| < 4 / (2*N + 1)
-```
+$ abs(pi - pi_N) < frac(4, 2 N + 1) $
 
 Mostrá la aproximación, el error y el tiempo de ejecución de ambas versiones.
 Probá distintos valores de `N` y distintas cantidades de trabajadores;
@@ -77,7 +73,8 @@ compará los resultados y el costo de la coordinación.
 
 #bonus[
   Conservá las versiones secuencial y multi-worker de la consigna y agregá una
-  tercera versión usando OpenMP. Las tres deben calcular la misma aproximación,
+  tercera versión usando OpenMP. Las tres deben calcular la misma aproximación de
+  $pi$,
   aceptar parámetros equivalentes y producir resultados comparables. Compará
   las tres ejecuciones con distintas cantidades de trabajadores o hilos e
   informá el speedup. Se sugiere usar C o C++.

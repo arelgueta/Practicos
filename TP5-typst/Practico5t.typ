@@ -54,8 +54,8 @@ $ ls | wc
 ```
 
 `wc` (*word count*) muestra, por defecto, la cantidad de líneas, palabras y
-bytes que recibió. El shell no copia esos datos a mano: crea un pipe, conecta
-los descriptores estándar de cada proceso y luego ejecuta los programas.
+bytes que recibió. El shell crea un `pipe`, conecta los descriptores estándar
+de cada proceso y luego ejecuta los programas.
 
 == Descriptores de archivo
 
@@ -81,11 +81,11 @@ FIFO (*First In, First Out*), en cambio, tiene un nombre y permite que procesos
 no relacionados la abran mediante ese nombre.
 
 #note[
-  Un pipe no es un archivo temporal. El núcleo mantiene un búfer para el canal
-  y entrega los bytes en el mismo orden en que fueron escritos. Si no queda
-  ningún descriptor de escritura abierto, una lectura puede observar fin de
-  archivo; si el búfer está vacío pero todavía existe un escritor, la lectura
-  espera.
+  El pipe es un canal gestionado por el núcleo, no un archivo temporal. El núcleo
+  mantiene un búfer para el canal y entrega los bytes en el mismo orden en que
+  fueron escritos. Si no queda ningún descriptor de escritura abierto, una
+  lectura puede observar fin de archivo; si el búfer está vacío pero todavía
+  existe un escritor, la lectura espera.
 ]
 
 == Construir `ls | wc`
@@ -117,18 +117,20 @@ $ strace -f -e trace=pipe,pipe2,dup2,close,execve,wait4 ./tuberia
 En el hijo que ejecuta `ls`, `dup2(fd[1], STDOUT_FILENO)` hace que el descriptor
 1 apunte al extremo de escritura. En el otro hijo, la misma operación hace que
 el descriptor 0 apunte al extremo de lectura. Después de duplicar, cada
-proceso cierra los descriptores que ya no necesita. Esos `close()` no son un
-detalle decorativo: un descriptor de escritura olvidado puede impedir que `wc`
-vea el fin de archivo.
+proceso cierra los descriptores que ya no necesita. Esos `close()` son
+necesarios para que `wc` pueda detectar el fin de archivo. Si permanece abierto
+algún descriptor de escritura, la lectura puede quedar esperando.
 
-1. Dibujá el pipe y marcá qué proceso conserva cada extremo después de los
-   cierres. Indicá qué representan los descriptores 0 y 1 en cada hijo.
-2. Explicá por qué el programa crea dos hijos en vez de ejecutar `wc`
-   directamente en el proceso original.
-3. Agregá una tercera etapa para construir una cadena equivalente a
-   `ls | wc -l | cat`. ¿Qué extremos debe cerrar cada proceso?
-4. Consultá `/proc/<pid>/fd` mientras un proceso permanece bloqueado en una
-   lectura. Relacioná los enlaces simbólicos con los descriptores del programa.
+#extra[
+  1. Hacé un diagrama del pipe y marcá qué proceso conserva cada extremo después de los
+     cierres. Indicá qué representan los descriptores 0 y 1 en cada hijo.
+  2. Explicá por qué el programa crea dos hijos en vez de ejecutar `wc`
+     directamente en el proceso original.
+  3. Agregá una tercera etapa para construir una cadena equivalente a
+     `ls | wc -l | cat`. ¿Qué extremos debe cerrar cada proceso?
+  4. Consultá `/proc/<pid>/fd` mientras un proceso permanece bloqueado en una
+     lectura. Relacioná los enlaces simbólicos con los descriptores del programa.
+]
 
 = Tuberías con nombre: `mkfifo`
 
@@ -192,10 +194,10 @@ operaciones principales son:
   [`F_TEST`], [comprueba si la región está disponible, sin tomarla],
 )
 
-Estos candados son normalmente *advisory*: el núcleo coordina a los procesos
-que también intentan adquirir el candado, pero no impide que un programa que lo
-ignora escriba el archivo. El candado se libera al ejecutar `F_ULOCK` o cuando
-el proceso cierra el archivo o termina.
+Estos candados son normalmente *advisory*. El núcleo coordina únicamente a los
+procesos que intentan adquirir el candado; un programa que lo ignore puede
+escribir igualmente en el archivo. El candado se libera al ejecutar `F_ULOCK` o
+cuando el proceso cierra el archivo o termina.
 
 == Un candado bloqueante
 
@@ -254,7 +256,7 @@ versión del núcleo y de los demás procesos del sistema.
   Investigá `flock()` y los candados POSIX de `fcntl()`. Compará qué objetos
   identifican, qué ocurre al duplicar un descriptor y si los candados son
   heredados después de `fork()`. Consultá las páginas de manual de `flock(2)`,
-  `fcntl(2)` y `lockf(3)`; no modifiques archivos del sistema.
+  `fcntl(2)` y `lockf(3)`.
 ]
 
 = Semáforos de System V
@@ -278,9 +280,9 @@ de System V:
 == Permisos del conjunto
 
 Los permisos de un semáforo de System V se aplican al conjunto completo y
-siguen el esquema de propietario, grupo y otros usuarios. Sus nombres no son
-"lectura" y "escritura", sino lectura y alteración: no hay datos que leer o
-escribir como en un archivo.
+siguen el esquema de propietario, grupo y otros usuarios. En este caso se habla
+de lectura y alteración: el conjunto no contiene un flujo de datos como un
+archivo.
 
 - El permiso de lectura permite consultar valores y metadatos, por ejemplo con
   `GETVAL`, `GETALL` o `IPC_STAT`.
@@ -302,11 +304,11 @@ a cero.
 
 == Crear e inicializar un semáforo
 
-El programa siguiente solicita un conjunto con un semáforo usando
-`IPC_PRIVATE`. En este contexto, esa constante no significa que el semáforo sea
-sólo del proceso: indica a `semget()` que debe crear un nuevo conjunto. El
-programa incrementa el semáforo a 1 y deja el conjunto existente para que puedas
-inspeccionarlo y eliminarlo en el paso siguiente.
+El programa siguiente crea un conjunto con un semáforo. La llamada usa
+`IPC_PRIVATE`. Esta constante indica a `semget()` que debe crear un conjunto
+nuevo; no restringe su uso al proceso creador. El programa incrementa el
+semáforo a 1 y deja el conjunto existente para que puedas inspeccionarlo y
+eliminarlo en el paso siguiente.
 
 #raw(read("../examples/tp5/creasem.c"), lang: "c", block: true)
 
@@ -379,6 +381,7 @@ con `ipcrm -s SEMID`, siempre que tengas permisos. Los semáforos de System V
 son recursos persistentes del núcleo: terminar el programa creador no los
 elimina automáticamente.
 
+#extra[
 1. Ejecutá `creasem` dos veces sin eliminar los conjuntos. ¿Cuántas entradas
    nuevas aparecen y por qué `IPC_PRIVATE` no hace que ambas ejecuciones
    compartan el mismo conjunto?
@@ -387,3 +390,4 @@ elimina automáticamente.
 3. Relacioná la operación negativa de `semop()` con la espera bloqueante de
    `lockf(F_LOCK)`. ¿Qué tienen en común y qué no protegen por sí solos?
 4. Consultá `/proc/sysvipc/sem` y compará su información con `ipcs -s`.
+]

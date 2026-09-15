@@ -3,8 +3,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-int main(void)
-{
+int main(void) {
     struct sembuf incrementar = {
         .sem_num = 0,
         .sem_op = 1,

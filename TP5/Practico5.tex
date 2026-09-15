@@ -100,9 +100,8 @@ $ ls | wc
 \end{lstlisting}
 
 \texttt{wc} (\emph{word count}) muestra, por defecto, la cantidad de líneas,
-palabras y bytes que recibió. El shell no copia esos datos a mano: crea un
-pipe, conecta los descriptores estándar de cada proceso y luego ejecuta los
-programas.
+palabras y bytes que recibió. El shell crea un \texttt{pipe}, conecta los
+descriptores estándar de cada proceso y luego ejecuta los programas.
 
 \subsection{Descriptores de archivo}
 
@@ -128,10 +127,11 @@ procesos pueden usarlo si heredan sus descriptores, normalmente después de un
 nombre y permite que procesos no relacionados la abran mediante ese nombre.
 
 \begin{notebox}
-Un pipe no es un archivo temporal. El núcleo mantiene un búfer para el canal y
-entrega los bytes en el mismo orden en que fueron escritos. Si no queda ningún
-descriptor de escritura abierto, una lectura puede observar fin de archivo;
-si el búfer está vacío pero todavía existe un escritor, la lectura espera.
+El pipe es un canal gestionado por el núcleo, no un archivo temporal. El núcleo
+mantiene un búfer para el canal y entrega los bytes en el mismo orden en que
+fueron escritos. Si no queda ningún descriptor de escritura abierto, una
+lectura puede observar fin de archivo; si el búfer está vacío pero todavía
+existe un escritor, la lectura espera.
 \end{notebox}
 
 \subsection{Construir \texttt{ls | wc}}
@@ -167,11 +167,13 @@ En el hijo que ejecuta \texttt{ls}, \texttt{dup2(fd[1], STDOUT\_FILENO)} hace
 que el descriptor 1 apunte al extremo de escritura. En el otro hijo, la misma
 operación hace que el descriptor 0 apunte al extremo de lectura. Después de
 duplicar, cada proceso cierra los descriptores que ya no necesita. Esos
-\texttt{close()} no son un detalle decorativo: un descriptor de escritura
-olvidado puede impedir que \texttt{wc} vea el fin de archivo.
+\texttt{close()} son necesarios para que \texttt{wc} pueda detectar el fin de
+archivo. Si permanece abierto algún descriptor de escritura, la lectura puede
+quedar esperando.
 
+\begin{extrabox}
 \begin{enumerate}
-  \item Dibujá el pipe y marcá qué proceso conserva cada extremo después de
+  \item Hacé un diagrama del pipe y marcá qué proceso conserva cada extremo después de
   los cierres. Indicá qué representan los descriptores 0 y 1 en cada hijo.
   \item Explicá por qué el programa crea dos hijos en vez de ejecutar
   \texttt{wc} directamente en el proceso original.
@@ -181,6 +183,7 @@ olvidado puede impedir que \texttt{wc} vea el fin de archivo.
   bloqueado en una lectura. Relacioná los enlaces simbólicos con los
   descriptores del programa.
 \end{enumerate}
+\end{extrabox}
 
 \subsection{Tuberías con nombre: \texttt{mkfifo}}
 
@@ -246,9 +249,9 @@ descriptor. Las operaciones principales son:
 \end{tabular}
 \end{center}
 
-Estos candados son normalmente \emph{advisory}: el núcleo coordina a los
-procesos que también intentan adquirir el candado, pero no impide que un
-programa que lo ignora escriba el archivo. El candado se libera al ejecutar
+Estos candados son normalmente \emph{advisory}. El núcleo coordina únicamente a
+los procesos que intentan adquirir el candado; un programa que lo ignore puede
+escribir igualmente en el archivo. El candado se libera al ejecutar
 \texttt{F\_ULOCK} o cuando el proceso cierra el archivo o termina.
 
 \subsection{Un candado bloqueante}
@@ -311,8 +314,7 @@ de la versión del núcleo y de los demás procesos del sistema.
 Investigá \texttt{flock()} y los candados POSIX de \texttt{fcntl()}. Compará
 qué objetos identifican, qué ocurre al duplicar un descriptor y si los
 candados son heredados después de \texttt{fork()}. Consultá las páginas de
-manual de \texttt{flock(2)}, \texttt{fcntl(2)} y \texttt{lockf(3)}; no
-modifiques archivos del sistema.
+manual de \texttt{flock(2)}, \texttt{fcntl(2)} y \texttt{lockf(3)}.
 \end{extrabox}
 
 \section{Semáforos de System V}
@@ -338,9 +340,9 @@ Communication}) de System V:
 \subsection{Permisos del conjunto}
 
 Los permisos de un semáforo de System V se aplican al conjunto completo y
-siguen el esquema de propietario, grupo y otros usuarios. Sus nombres no son
-``lectura'' y ``escritura'', sino lectura y alteración: no hay datos que leer o
-escribir como en un archivo.
+siguen el esquema de propietario, grupo y otros usuarios. En este caso se
+habla de lectura y alteración: el conjunto no contiene un flujo de datos como
+un archivo.
 
 \begin{itemize}
   \item El permiso de lectura permite consultar valores y metadatos, por
@@ -364,11 +366,11 @@ hasta que el valor llegue a cero.
 
 \subsection{Crear e inicializar un semáforo}
 
-El programa siguiente solicita un conjunto con un semáforo. Usa la constante
-\texttt{IPC\_PRIVATE} para pedir que se cree un conjunto nuevo. En este
-contexto, esa constante no significa que el semáforo sea sólo del proceso:
-indica a \texttt{semget()} que debe crear un conjunto. El programa incrementa el semáforo a 1 y deja el conjunto
-existente para que puedas inspeccionarlo y eliminarlo en el paso siguiente.
+El programa siguiente crea un conjunto con un semáforo. La llamada usa
+\texttt{IPC\_PRIVATE}. Esta constante indica a \texttt{semget()} que debe
+crear un conjunto nuevo; no restringe su uso al proceso creador. El programa
+incrementa el semáforo a 1 y deja el conjunto existente para que puedas
+inspeccionarlo y eliminarlo en el paso siguiente.
 
 \inputcode[language=C,basicstyle=\ttfamily\footnotesize]{../examples/tp5/creasem.c}
 
@@ -443,6 +445,7 @@ con \texttt{ipcrm -s SEMID}, siempre que tengas permisos. Los semáforos de
 System V son recursos persistentes del núcleo: terminar el programa creador no
 los elimina automáticamente.
 
+\begin{extrabox}
 \begin{enumerate}
   \item Ejecutá \texttt{creasem} dos veces sin eliminar los conjuntos.
   ¿Cuántas entradas nuevas aparecen y por qué \texttt{IPC\_PRIVATE} no hace
@@ -456,5 +459,6 @@ los elimina automáticamente.
   \item Consultá \texttt{/proc/sysvipc/sem} y compará su información con
   \texttt{ipcs -s}.
 \end{enumerate}
+\end{extrabox}
 
 \end{document}

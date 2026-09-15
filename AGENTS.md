@@ -28,6 +28,24 @@ main term and use the English parenthetical to disambiguate the concept.
 In Spanish questions and exclamations, use only the closing question and
 exclamation symbols; omit the corresponding opening symbols.
 
+## Naturalidad de la prosa docente
+
+Escribí con el tono claro y cercano de un profesor universitario. Explicá
+directamente qué hace cada mecanismo y cuál es su consecuencia; preferí
+formulaciones concretas y naturales a frases enfáticas o solemnes. En la
+revisión final, reformulá expresiones como «no es un detalle decorativo»,
+«no es X, sino Y» o «a mano» cuando funcionen como énfasis artificial en vez
+de aportar una explicación técnica. Aplicá esta revisión por igual a las
+versiones LaTeX y Typst y comprobá el texto tal como aparece en el PDF.
+
+## Advertencias en las consignas
+
+No agregues advertencias, precauciones ni descargos a las consignas. Indicá
+directamente qué debe hacer el estudiante y qué resultado debe observar. Si la
+actividad necesita un límite técnico, una condición de permisos o un recurso
+de prueba, incorporalo como parte del procedimiento o del requisito, no como
+una advertencia separada.
+
 ## Regular TP activities
 
 Keep regular TP activities focused on guiding live experimentation and
@@ -35,6 +53,10 @@ understanding. Do not add hand-in artifacts such as comparison tables,
 observation logs, or closing reports unless the task explicitly requests a
 submission; reserve submission-oriented work for explicitly defined extra or
 bonus tasks.
+
+Place optional comparison, follow-up, and deeper-investigation questions in an
+inline `EXTRA` block rather than in the main regular sequence. Keep the block
+in both source versions, using `extrabox` in LaTeX and `#extra[...]` in Typst.
 
 ## Source files and included examples
 
@@ -47,6 +69,12 @@ and extra TPs alike. Keep short illustrative fragments, API declarations,
 commands, and command output inline when they are not standalone source files.
 When adding an example, update the corresponding CI path filter so changing
 the example rebuilds the report that includes it.
+
+## C example style
+
+Use Java/K&R brace placement in C examples: put each opening brace on the same
+line as the function, control statement, or initializer it belongs to, never on
+a standalone line. Use four spaces for indentation.
 
 ## Building documents
 

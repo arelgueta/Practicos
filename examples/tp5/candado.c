@@ -6,8 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     const char *ruta = argc == 2 ? argv[1] : "archivo";
     int fd = open(ruta, O_RDWR | O_CREAT, 0666);
 

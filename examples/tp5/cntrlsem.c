@@ -5,8 +5,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     char *final;
     long valor;
 

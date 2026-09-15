@@ -5,8 +5,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int main(void)
-{
+int main(void) {
     int fd[2];
     pid_t productor;
     pid_t consumidor;

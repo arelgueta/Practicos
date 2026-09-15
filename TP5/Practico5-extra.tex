@@ -89,25 +89,23 @@ instance-limit SEM_KEY MAX_INSTANCES -- COMMAND [ARGS...]
 Investigá la inicialización, la reserva y liberación de cupos, el
 comportamiento cuando se alcanza el límite y la limpieza del semáforo.
 
-\begin{bonusbox}
-Extendé el programa para que pueda detectar una instancia abandonada y
-recuperar su cupo sin afectar otros procesos. Documentá qué garantías ofrece
-\texttt{SEM\_UNDO} y cómo se comporta el programa frente a una terminación
-normal, \texttt{SIGTERM} y \texttt{SIGKILL}.
-\end{bonusbox}
+\newpage
+\section{Aproximación de $\pi$ y rendimiento (5/10)}
 
-\section{Aproximación de $\pi$ y rendimiento}
-
-\begin{trackbox}{PI}
+\begin{trackbox}{5/10}
 \textbf{Descripción:} aproximar $\pi$ sumando términos de una expansión y
 medir el costo de aumentar la cantidad de términos.
 \end{trackbox}
 
-Implementá un programa secuencial que reciba $N$ y calcule:
+Implementá dos versiones de un programa que reciba $N$ y calcule:
 
 \[
 \pi_N = 4 \sum_{k=0}^{N-1} \frac{(-1)^k}{2k+1}.
 \]
+
+Una versión debe ser secuencial. La otra debe repartir los términos entre
+varios trabajadores concurrentes, recibir una cantidad configurable de
+trabajadores y combinar los resultados parciales.
 
 El error de esta aproximación cumple
 
@@ -115,20 +113,22 @@ El error de esta aproximación cumple
 \left|\pi - \pi_N\right| < \frac{4}{2N+1}.
 \]
 
-Mostrá la aproximación, el error y el tiempo de ejecución. Probá distintos
-valores de $N$ y compará los resultados.
+Mostrá la aproximación, el error y el tiempo de ejecución de ambas versiones.
+Probá distintos valores de $N$ y distintas cantidades de trabajadores;
+compará los resultados y el costo de la coordinación.
 
 \begin{bonusbox}
-Implementá una segunda versión del programa usando OpenMP. Debe calcular la
-misma aproximación de $\pi$, aceptar los mismos parámetros y producir
-resultados comparables con la versión secuencial. Compará la ejecución
-secuencial con distintas cantidades de hilos e informá el speedup. Se sugiere
-usar C o C++.
+Conservá las versiones secuencial y multi-worker de la consigna y agregá una
+tercera versión usando OpenMP. Las tres deben calcular la misma aproximación,
+aceptar parámetros equivalentes y producir resultados comparables. Compará
+las tres ejecuciones con distintas cantidades de trabajadores o hilos e
+informá el speedup. Se sugiere usar C o C++.
 \end{bonusbox}
 
-\section{Transferencia por pipes y SSH}
+\newpage
+\section{Transferencia por pipes y SSH (4/10)}
 
-\begin{trackbox}{SSH}
+\begin{trackbox}{4/10}
 \textbf{Descripción:} transferir y extraer un directorio remoto usando un
 pipe, sin crear un archivo intermedio.
 \end{trackbox}
@@ -136,7 +136,7 @@ pipe, sin crear un archivo intermedio.
 Investigá brevemente qué resuelven \texttt{scp} y \texttt{rsync}, y compará
 esas herramientas con una transferencia basada en un flujo de datos.
 
-Después, escribí una única línea de comandos que:
+Después, escribí un \texttt{one-liner} que:
 
 \begin{itemize}
   \item empaquete un directorio local y envíe el resultado por la salida
@@ -150,9 +150,10 @@ La solución debe usar pipes, \texttt{ssh} y \texttt{tar}. No uses
 intermedio. Probá la línea con una máquina remota y verificá que la estructura
 y el contenido lleguen correctamente.
 
-\section{Cliente-servidor: solicitud y respuesta}
+\newpage
+\section{Cliente-servidor: solicitud y respuesta (6/10)}
 
-\begin{trackbox}{IPC}
+\begin{trackbox}{6/10}
 \textbf{Descripción:} implementar una comunicación básica entre un proceso
 cliente y un proceso servidor.
 \end{trackbox}
@@ -175,6 +176,8 @@ mostrar un rectángulo grande usando secuencias de escape ANSI y un personaje
 dentro del área. Configurá la entrada del terminal sin modo canónico ni eco
 para leer las teclas \texttt{W}, \texttt{A}, \texttt{S} y \texttt{D}
 inmediatamente, y restaurá la configuración al salir.
+Como referencia para las secuencias de control del terminal, consultá
+\href{https://www.xfree86.org/current/ctlseqs.html}{Xterm Control Sequences}.
 
 Cada tecla debe enviarse al servidor. El servidor debe validar y aplicar el
 movimiento, devolver el estado actualizado, incluyendo la posición del
@@ -182,9 +185,10 @@ personaje, y mantener la autoridad exclusiva sobre el estado. El cliente debe
 renderizar en tiempo real únicamente el estado recibido.
 \end{bonusbox}
 
-\section{Heartbeat y watchdog}
+\newpage
+\section{Heartbeat y watchdog (6/10)}
 
-\begin{trackbox}{WATCHDOG}
+\begin{trackbox}{6/10}
 \textbf{Descripción:} detectar la ausencia de un proceso mediante mensajes
 periódicos de heartbeat.
 \end{trackbox}
@@ -204,5 +208,33 @@ de los descriptores.
 
 Probá tanto el funcionamiento normal como la ausencia o terminación del
 proceso de trabajo.
+
+\newpage
+\section{Comunicación entre pares con FIFOs nombradas (5/10)}
+
+\begin{trackbox}{5/10}
+\textbf{Descripción:} construir una comunicación local entre procesos pares
+usando FIFOs (\emph{First In, First Out}) nombradas.
+\end{trackbox}
+
+Construí una aplicación de mensajería local. Una sala se representa con una
+carpeta compartida y cada proceso crea dentro de ella su propia FIFO nombrada.
+Los procesos deben descubrirse y enviarse mensajes directamente, sin un
+servidor central. Definí un protocolo simple, separá los mensajes sucesivos y
+limpiá la FIFO al salir. Podés usar Protocol Buffers (protobuf) para
+serializar los mensajes.
+
+Probá varios pares en una misma sala, la entrada y salida de procesos y la
+desaparición inesperada de uno de ellos. Observá las FIFOs y sus descriptores
+con \texttt{ls -l} y \texttt{/proc/<pid>/fd}.
+
+\begin{bonusbox}
+Convertí la aplicación en una sala de chat local entre pares. Agregá una
+interfaz de terminal cómoda que permita escribir mensajes y mostrar los
+mensajes entrantes, manteniendo la comunicación directa, las salas por
+carpetas y una salida limpia. Podés consultar la documentación
+\href{https://www.xfree86.org/current/ctlseqs.html}{Xterm Control Sequences}
+para las secuencias de control del terminal.
+\end{bonusbox}
 
 \end{document}

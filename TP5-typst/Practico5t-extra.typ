@@ -47,25 +47,23 @@ instance-limit SEM_KEY MAX_INSTANCES -- COMMAND [ARGS...]
 Investigá la inicialización, la reserva y liberación de cupos, el comportamiento
 cuando se alcanza el límite y la limpieza del semáforo.
 
-#bonus[
-  Extendé el programa para que pueda detectar una instancia abandonada y
-  recuperar su cupo sin afectar otros procesos. Documentá qué garantías ofrece
-  `SEM_UNDO` y cómo se comporta el programa frente a una terminación normal,
-  `SIGTERM` y `SIGKILL`.
-]
+#pagebreak()
+= Aproximación de pi y rendimiento (5/10)
 
-= Aproximación de pi y rendimiento
-
-#track("PI", [
+#track("5/10", [
   *Descripción:* aproximar pi sumando términos de una expansión y medir el
   costo de aumentar la cantidad de términos.
 ])
 
-Implementá un programa secuencial que reciba `N` y calcule:
+Implementá dos versiones de un programa que reciba `N` y calcule:
 
 ```text
 pi_N = 4 * sum((-1)^k / (2*k + 1), k = 0 .. N-1)
 ```
+
+Una versión debe ser secuencial. La otra debe repartir los términos entre
+varios trabajadores concurrentes, recibir una cantidad configurable de
+trabajadores y combinar los resultados parciales.
 
 El error de esta aproximación cumple:
 
@@ -73,20 +71,22 @@ El error de esta aproximación cumple:
 |pi - pi_N| < 4 / (2*N + 1)
 ```
 
-Mostrá la aproximación, el error y el tiempo de ejecución. Probá distintos
-valores de `N` y compará los resultados.
+Mostrá la aproximación, el error y el tiempo de ejecución de ambas versiones.
+Probá distintos valores de `N` y distintas cantidades de trabajadores;
+compará los resultados y el costo de la coordinación.
 
 #bonus[
-  Implementá una segunda versión del programa usando OpenMP. Debe calcular
-  la misma aproximación de pi, aceptar los mismos parámetros y producir
-  resultados comparables con la versión secuencial. Compará la ejecución
-  secuencial con distintas cantidades de hilos e informá el speedup. Se sugiere
-  usar C o C++.
+  Conservá las versiones secuencial y multi-worker de la consigna y agregá una
+  tercera versión usando OpenMP. Las tres deben calcular la misma aproximación,
+  aceptar parámetros equivalentes y producir resultados comparables. Compará
+  las tres ejecuciones con distintas cantidades de trabajadores o hilos e
+  informá el speedup. Se sugiere usar C o C++.
 ]
 
-= Transferencia por pipes y SSH
+#pagebreak()
+= Transferencia por pipes y SSH (4/10)
 
-#track("SSH", [
+#track("4/10", [
   *Descripción:* transferir y extraer un directorio remoto usando un pipe, sin
   crear un archivo intermedio.
 ])
@@ -94,7 +94,7 @@ valores de `N` y compará los resultados.
 Investigá brevemente qué resuelven `scp` y `rsync`, y compará esas herramientas
 con una transferencia basada en un flujo de datos.
 
-Después, escribí una única línea de comandos que:
+Después, escribí un `one-liner` que:
 
 - empaquete un directorio local y envíe el resultado por la salida estándar;
 - use `ssh` para transportar ese flujo;
@@ -104,9 +104,10 @@ La solución debe usar pipes, `ssh` y `tar`. No uses `scp` ni `rsync` para
 resolverla, y no generes un archivo intermedio. Probá la línea con una máquina
 remota y verificá que la estructura y el contenido lleguen correctamente.
 
-= Cliente-servidor: solicitud y respuesta
+#pagebreak()
+= Cliente-servidor: solicitud y respuesta (6/10)
 
-#track("IPC", [
+#track("6/10", [
   *Descripción:* implementar una comunicación básica entre un proceso cliente
   y un proceso servidor.
 ])
@@ -127,6 +128,8 @@ respuesta mediante un mecanismo de comunicación entre procesos.
   dentro del área. Configurá la entrada del terminal sin modo canónico ni eco
   para leer las teclas `W`, `A`, `S` y `D`
   inmediatamente, y restaurá la configuración al salir.
+  Como referencia para las secuencias de control del terminal, consultá
+  #link("https://www.xfree86.org/current/ctlseqs.html")[Xterm Control Sequences].
 
   Cada tecla debe enviarse al servidor. El servidor debe validar y aplicar el
   movimiento, devolver el estado actualizado, incluyendo la posición del
@@ -134,9 +137,10 @@ respuesta mediante un mecanismo de comunicación entre procesos.
   renderizar en tiempo real únicamente el estado recibido.
 ]
 
-= Heartbeat y watchdog
+#pagebreak()
+= Heartbeat y watchdog (6/10)
 
-#track("WATCHDOG", [
+#track("6/10", [
   *Descripción:* detectar la ausencia de un proceso mediante mensajes
   periódicos de heartbeat.
 ])
@@ -154,3 +158,31 @@ de los descriptores.
 
 Probá tanto el funcionamiento normal como la ausencia o terminación del
 proceso de trabajo.
+
+#pagebreak()
+= Comunicación entre pares con FIFOs nombradas (5/10)
+
+#track("5/10", [
+  *Descripción:* construir una comunicación local entre procesos pares usando
+  FIFOs (*First In, First Out*) nombradas.
+])
+
+Construí una aplicación de mensajería local. Una sala se representa con una
+carpeta compartida y cada proceso crea dentro de ella su propia FIFO nombrada.
+Los procesos deben descubrirse y enviarse mensajes directamente, sin un
+servidor central. Definí un protocolo simple, separá los mensajes sucesivos y
+limpiá la FIFO al salir. Podés usar Protocol Buffers (protobuf) para
+serializar los mensajes.
+
+Probá varios pares en una misma sala, la entrada y salida de procesos y la
+desaparición inesperada de uno de ellos. Observá las FIFOs y sus descriptores
+con `ls -l` y `/proc/<pid>/fd`.
+
+#bonus[
+  Convertí la aplicación en una sala de chat local entre pares. Agregá una
+  interfaz de terminal cómoda que permita escribir mensajes y mostrar los
+  mensajes entrantes, manteniendo la comunicación directa, las salas por
+  carpetas y una salida limpia. Podés consultar la documentación
+  #link("https://www.xfree86.org/current/ctlseqs.html")[Xterm Control Sequences]
+  para las secuencias de control del terminal.
+]
